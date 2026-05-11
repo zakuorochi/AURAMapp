@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AURAM | Capturador de Prendas</title>
+    <style>
+        :root {
+            --cyan-auram: #00d1ff;
+            --dark-bg: #050505;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            background-color: var(--dark-bg);
+            color: #fff;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .screen {
+            position: fixed;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .active { display: flex; opacity: 1; }
+
+        /* Estética de Logo */
+        .logo-container { margin-bottom: 30px; }
+        .logo-auram { width: 100px; filter: drop-shadow(0 0 15px rgba(0, 209, 255, 0.4)); }
+        .brand-name { 
+            font-weight: 200; 
+            letter-spacing: 10px; 
+            font-size: 1.2rem; 
+            color: #fff;
+            margin-top: 10px;
+        }
+
+        /* Formulario de Login (Inactivo) */
+        .login-box {
+            width: 100%;
+            max-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        input {
+            background: var(--glass-bg);
+            border: 1px solid rgba(0, 209, 255, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+            color: #fff;
+            outline: none;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        /* Botones Estilo AURAM */
+        .btn-auram {
+            background: linear-gradient(135deg, #00d1ff, #0072ff);
+            color: #fff;
+            border: none;
+            padding: 18px;
+            border-radius: 30px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 209, 255, 0.3);
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+
+        /* Pantalla de Instrucciones */
+        .instruction-card {
+            background: var(--glass-bg);
+            border: 1px solid rgba(0, 209, 255, 0.1);
+            padding: 30px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            max-width: 340px;
+        }
+
+        .instruction-card h2 {
+            color: var(--cyan-auram);
+            font-weight: 300;
+            letter-spacing: 3px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .instruction-list {
+            text-align: left;
+            font-size: 0.75rem;
+            color: #bbb;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            list-style: none;
+            padding: 0;
+        }
+
+        .instruction-list li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .instruction-list li::before {
+            content: "•";
+            color: var(--cyan-auram);
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        /* Footer del Botón */
+        .bottom-nav {
+            position: absolute;
+            bottom: 50px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Cámara Placeholder */
+        #camera-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #000;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="screen-login" class="screen active">
+        <div class="logo-container">
+            <img src="logo-auram.png" class="logo-auram">
+            <div class="brand-name">AURAM APP</div>
+        </div>
+        <div class="login-box">
+            <input type="text" placeholder="USUARIO" readonly value="ADMIN_TEST">
+            <input type="password" placeholder="CONTRASEÑA" readonly value="••••••••">
+            <button class="btn-auram" onclick="irA('screen-instructions')">Entrar</button>
+        </div>
+    </div>
+
+    <div id="screen-instructions" class="screen">
+        <div class="instruction-card">
+            <h2>REGLAS DE CAPTURA</h2>
+            <ul class="instruction-list">
+                <li>Coloca la prenda en una superficie plana y de color sólido (preferiblemente blanco o verde).</li>
+                <li>Asegúrate de tener iluminación uniforme para evitar sombras duras.</li>
+                <li>La cámara debe estar totalmente paralela a la prenda (vista cenital).</li>
+                <li>Evita arrugas en la tela para un mejor resultado en la fusión IA.</li>
+            </ul>
+        </div>
+        <div class="bottom-nav">
+            <button class="btn-auram" style="width: 200px;" onclick="irA('screen-camera')">Abrir Cámara</button>
+        </div>
+    </div>
+
+    <div id="screen-camera" class="screen" style="padding: 0;">
+        <video id="webcam" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
+        <div class="bottom-nav">
+            <button class="btn-auram" onclick="alert('Capturando paso 1...')">Capturar Prenda</button>
+        </div>
+    </div>
+
+    <script>
+        function irA(screenId) {
+            // Ocultar todas las pantallas
+            document.querySelectorAll('.screen').forEach(s => {
+                s.classList.remove('active');
+            });
+            
+            // Mostrar la seleccionada
+            const target = document.getElementById(screenId);
+            target.classList.add('active');
+
+            // Si es la cámara, inicializarla
+            if(screenId === 'screen-camera') {
+                iniciarCamara();
+            }
+        }
+
+        async function iniciarCamara() {
+            const video = document.getElementById('webcam');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment" }, // Cámara trasera
+                    audio: false 
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                alert("Error al acceder a la cámara: " + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
