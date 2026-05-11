@@ -1,0 +1,9 @@
+"name": "auram-capturador-back",
+  "version": "1.0.0",
+  "dependencies": {
+    "@google/generative-ai": "^0.11.4",
+    "express": "^4.19.2",
+    "sharp": "^0.33.4",
+    "cors": "^2.8.5"
+  }
+}
