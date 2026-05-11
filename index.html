@@ -177,6 +177,15 @@
         </div>
     </div>
 
+    <div id="screen-confirm" class="screen">
+    <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 3px;">¿ES ESTA LA PRENDA?</h3>
+    <img id="photo-preview" style="width: 80%; border-radius: 15px; border: 1px solid var(--cyan-auram); margin: 20px 0;">
+    <div style="display: flex; gap: 15px; width: 80%;">
+        <button class="btn-auram" style="flex:1; background: #333;" onclick="irA('screen-camera')">NO</button>
+        <button class="btn-auram" style="flex:1;" onclick="procesarBorradorFondo()">SÍ</button>
+    </div>
+</div>
+
     <script>
         function irA(screenId) {
             // Ocultar todas las pantallas
@@ -206,6 +215,20 @@
                 alert("Error al acceder a la cámara: " + err.message);
             }
         }
+
+        let fotoCapturada64 = null;
+
+function capturarFoto() {
+    const video = document.getElementById('webcam');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    
+    fotoCapturada64 = canvas.toDataURL('image/jpeg', 0.8);
+    document.getElementById('photo-preview').src = fotoCapturada64;
+    irA('screen-confirm');
+}
     </script>
 </body>
 </html>
