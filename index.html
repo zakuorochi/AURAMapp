@@ -218,17 +218,26 @@
 
         let fotoCapturada64 = null;
 
-function capturarFoto() {
+// Variable global para guardar la foto
+let fotoBase64 = null;
+
+async function capturarPrenda() {
     const video = document.getElementById('webcam');
     const canvas = document.createElement('canvas');
+    
+    // Capturamos en alta resolución
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
     
-    fotoCapturada64 = canvas.toDataURL('image/jpeg', 0.8);
-    document.getElementById('photo-preview').src = fotoCapturada64;
+    // Convertimos a Base64
+    fotoBase64 = canvas.toDataURL('image/jpeg', 0.8);
+    
+    // Mostramos la foto en la pantalla de confirmación
+    document.getElementById('photo-preview').src = fotoBase64;
     irA('screen-confirm');
 }
+        
     </script>
 </body>
 </html>
