@@ -187,21 +187,25 @@
 </div>
 
     <script>
-        function irA(screenId) {
-            // Ocultar todas las pantallas
-            document.querySelectorAll('.screen').forEach(s => {
-                s.classList.remove('active');
-            });
-            
-            // Mostrar la seleccionada
-            const target = document.getElementById(screenId);
-            target.classList.add('active');
-
-            // Si es la cámara, inicializarla
-            if(screenId === 'screen-camera') {
-                iniciarCamara();
-            }
+     function irA(screenId) {
+    // Ocultar todas las pantallas
+    document.querySelectorAll('.screen').forEach(s => {
+        s.classList.remove('active');
+        s.style.display = 'none'; // Aseguramos que se oculten físicamente
+    });
+    
+    // Mostrar la seleccionada
+    const target = document.getElementById(screenId);
+    if (target) {
+        target.classList.add('active');
+        target.style.display = 'flex';
+        
+        // Si entramos a la cámara, la encendemos
+        if(screenId === 'screen-camera') {
+            iniciarCamara();
         }
+    }
+}
 
         async function iniciarCamara() {
             const video = document.getElementById('webcam');
