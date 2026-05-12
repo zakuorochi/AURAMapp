@@ -187,77 +187,79 @@
 </div>
 
     <script>
-     function irA(screenId) {
-    // Ocultar todas las pantallas
-    document.querySelectorAll('.screen').forEach(s => {
-        s.classList.remove('active');
-        s.style.display = 'none'; // Aseguramos que se oculten físicamente
-    });
-    
-    // Mostrar la seleccionada
-    const target = document.getElementById(screenId);
-    if (target) {
-        target.classList.add('active');
-        target.style.display = 'flex';
+ <script>
+    // 1. Declaración ÚNICA de variables globales
+    let fotoBase64 = null;
+    let appIniciada = false;
+
+    // 2. Función de Navegación Robusta
+    function irA(screenId) {
+        console.log("Navegando a:", screenId);
         
-        // Si entramos a la cámara, la encendemos
-        if(screenId === 'screen-camera') {
-            iniciarCamara();
+        // Ocultar todas las pantallas
+        document.querySelectorAll('.screen').forEach(s => {
+            s.classList.remove('active');
+            s.style.display = 'none';
+        });
+        
+        // Mostrar la seleccionada
+        const target = document.getElementById(screenId);
+        if (target) {
+            target.classList.add('active');
+            target.style.display = 'flex';
+            
+            // Si entramos a la cámara, la encendemos
+            if(screenId === 'screen-camera') {
+                iniciarCamara();
+            }
+        } else {
+            console.error("No se encontró la pantalla:", screenId);
         }
     }
-}
 
-        async function iniciarCamara() {
-            const video = document.getElementById('webcam');
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment" }, // Cámara trasera
-                    audio: false 
-                });
-                video.srcObject = stream;
-            } catch (err) {
-                alert("Error al acceder a la cámara: " + err.message);
-            }
+    // 3. Función de Cámara
+    async function iniciarCamara() {
+        const video = document.getElementById('webcam');
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: "environment",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }, 
+                audio: false 
+            });
+            video.srcObject = stream;
+        } catch (err) {
+            console.error("Error de cámara:", err);
+            alert("Error al acceder a la cámara. Asegúrate de usar HTTPS.");
         }
+    }
 
-        let fotoCapturada64 = null;
+    // 4. Función de Captura de Foto
+    async function capturarPrenda() {
+        const video = document.getElementById('webcam');
+        const canvas = document.createElement('canvas');
+        
+        // Capturamos en la resolución real del video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        // Guardamos en la variable global
+        fotoBase64 = canvas.toDataURL('image/jpeg', 0.8);
+        
+        // Actualizamos la vista previa y cambiamos de pantalla
+        document.getElementById('photo-preview').src = fotoBase64;
+        irA('screen-confirm');
+    }
 
-
-async function capturarPrenda() {
-    const video = document.getElementById('webcam');
-    const canvas = document.createElement('canvas');
-    
-    // Capturamos en alta resolución
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    
-    // Convertimos a Base64
-    fotoBase64 = canvas.toDataURL('image/jpeg', 0.8);
-    
-    // Mostramos la foto en la pantalla de confirmación
-    document.getElementById('photo-preview').src = fotoBase64;
-    irA('screen-confirm');
-}
-        // Variable global para guardar la foto
-let fotoBase64 = null;
-
-async function capturarPrenda() {
-    const video = document.getElementById('webcam');
-    const canvas = document.createElement('canvas');
-    
-    // Capturamos en alta resolución
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    
-    // Convertimos a Base64
-    fotoBase64 = canvas.toDataURL('image/jpeg', 0.8);
-    
-    // Mostramos la foto en la pantalla de confirmación
-    document.getElementById('photo-preview').src = fotoBase64;
-    irA('screen-confirm');
-}
+    // 5. Función para procesar (Siguiente paso API)
+    async function procesarBorradorFondo() {
+        alert("Enviando a la IA para borrar fondo...");
+        // Aquí irá el fetch a /api/borrar-fondo una vez desplegado
+    }
+</script>
         
     </script>
 </body>
