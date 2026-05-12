@@ -1,9 +1,8 @@
 {
   "name": "auram-mapp",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
   "dependencies": {
-    "@google/generative-ai": "^0.11.4",
-    "express": "^4.19.2"
+    "@google/generative-ai": "^0.11.4"
   }
 }
