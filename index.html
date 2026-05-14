@@ -34,6 +34,7 @@
 
         .active { display: flex; opacity: 1; }
 
+        /* Estética de Logo */
         .logo-container { margin-bottom: 30px; }
         .logo-auram { width: 100px; filter: drop-shadow(0 0 15px rgba(0, 209, 255, 0.4)); }
         .brand-name { 
@@ -42,14 +43,6 @@
             font-size: 1.2rem; 
             color: #fff;
             margin-top: 10px;
-        }
-
-        .login-box {
-            width: 100%;
-            max-width: 300px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
         }
 
         input {
@@ -61,6 +54,9 @@
             outline: none;
             text-align: center;
             font-size: 0.9rem;
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 10px;
         }
 
         .btn-auram {
@@ -75,7 +71,8 @@
             cursor: pointer;
             box-shadow: 0 0 20px rgba(0, 209, 255, 0.3);
             font-size: 0.8rem;
-            margin-top: 10px;
+            width: 100%;
+            max-width: 300px;
         }
 
         .instruction-card {
@@ -85,14 +82,6 @@
             border-radius: 25px;
             backdrop-filter: blur(10px);
             max-width: 340px;
-        }
-
-        .instruction-card h2 {
-            color: var(--cyan-auram);
-            font-weight: 300;
-            letter-spacing: 3px;
-            font-size: 1rem;
-            margin-bottom: 20px;
         }
 
         .instruction-list {
@@ -105,25 +94,11 @@
             padding: 0;
         }
 
-        .instruction-list li {
-            margin-bottom: 10px;
-            display: flex;
-            align-items: flex-start;
-        }
-
         .instruction-list li::before {
             content: "•";
             color: var(--cyan-auram);
             margin-right: 10px;
             font-weight: bold;
-        }
-
-        .bottom-nav {
-            position: absolute;
-            bottom: 50px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
         }
 
         video {
@@ -132,29 +107,60 @@
             object-fit: cover;
             background: #000;
         }
+
+        /* Pantalla de Carga */
+        .loader {
+            border: 3px solid rgba(0,209,255,0.1);
+            border-top: 3px solid var(--cyan-auram);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Checkerboard para transparencia */
+        .preview-bg {
+            background: url('https://www.transparenttextures.com/patterns/checkerboard.png');
+            background-color: #111;
+            border-radius: 15px;
+            border: 1px dashed var(--cyan-auram);
+            width: 85%;
+            margin: 20px 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 250px;
+        }
+
+        .bottom-nav { position: absolute; bottom: 50px; width: 100%; display: flex; justify-content: center; }
     </style>
 </head>
 <body>
 
+    <!-- FASE 1: LOGIN -->
     <div id="screen-login" class="screen active" style="display: flex;">
         <div class="logo-container">
             <img src="logo-auram.png" class="logo-auram">
             <div class="brand-name">AURAM APP</div>
         </div>
-        <div class="login-box">
+        <div class="login-box" style="display:flex; flex-direction:column; gap:10px; width:100%; align-items:center;">
             <input type="text" placeholder="USUARIO" readonly value="ADMIN_TEST">
             <input type="password" placeholder="CONTRASEÑA" readonly value="••••••••">
             <button class="btn-auram" onclick="irA('screen-instructions')">Entrar</button>
         </div>
     </div>
 
+    <!-- FASE 2: INSTRUCCIONES -->
     <div id="screen-instructions" class="screen">
         <div class="instruction-card">
-            <h2>REGLAS DE CAPTURA</h2>
+            <h2 style="color:var(--cyan-auram); font-weight:300; letter-spacing:3px; font-size:1rem; margin-bottom:20px;">REGLAS DE CAPTURA</h2>
             <ul class="instruction-list">
-                <li>Coloca la prenda en una superficie plana y de color sólido.</li>
+                <li>Coloca la prenda en una superficie plana y sólida.</li>
                 <li>Asegúrate de tener iluminación uniforme.</li>
-                <li>La cámara debe estar paralela a la prenda (vista cenital).</li>
+                <li>La cámara debe estar paralela a la prenda.</li>
                 <li>Evita arrugas en la tela.</li>
             </ul>
         </div>
@@ -163,6 +169,7 @@
         </div>
     </div>
 
+    <!-- FASE 3: CÁMARA -->
     <div id="screen-camera" class="screen" style="padding: 0;">
         <video id="webcam" autoplay playsinline muted></video>
         <div class="bottom-nav">
@@ -170,22 +177,39 @@
         </div>
     </div>
 
+    <!-- FASE 4: CONFIRMACIÓN -->
     <div id="screen-confirm" class="screen">
         <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 3px;">¿ES ESTA LA PRENDA?</h3>
         <img id="photo-preview" style="width: 80%; border-radius: 15px; border: 1px solid var(--cyan-auram); margin: 20px 0;">
-        <div style="display: flex; gap: 15px; width: 80%;">
+        <div style="display: flex; gap: 15px; width: 85%;">
             <button class="btn-auram" style="flex:1; background: #333;" onclick="irA('screen-camera')">NO</button>
             <button class="btn-auram" style="flex:1;" onclick="procesarBorradorFondo()">SÍ</button>
         </div>
     </div>
 
-    <script>
-        // 1. Variables globales
-        let fotoBase64 = null;
+    <!-- FASE 5: RESULTADO IA -->
+    <div id="screen-result-ia" class="screen">
+        <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 3px;">VISTA PREVIA (SIN FONDO)</h3>
+        <div class="preview-bg">
+            <img id="ia-output-preview" style="width: 100%; display: block;">
+        </div>
+        <div style="display: flex; gap: 15px; width: 85%;">
+            <button class="btn-auram" style="flex:1; background: #333;" onclick="irA('screen-camera')">REPETIR</button>
+            <button class="btn-auram" style="flex:1;" onclick="alert('Digitalización completa. Guardando en catálogo...')">ACEPTAR</button>
+        </div>
+    </div>
 
-        // 2. Navegación
+    <!-- PANTALLA DE CARGA -->
+    <div id="screen-loading" class="screen" style="background: rgba(0,0,0,0.95); z-index: 10000;">
+        <div class="loader"></div>
+        <div style="color:var(--cyan-auram); letter-spacing:3px; font-weight:bold; font-size:0.7rem;">ELIMINANDO FONDO...</div>
+    </div>
+
+    <script>
+        let fotoBase64 = null;
+        let streamActivo = null;
+
         function irA(screenId) {
-            console.log("Navegando a:", screenId);
             document.querySelectorAll('.screen').forEach(s => {
                 s.classList.remove('active');
                 s.style.display = 'none';
@@ -196,25 +220,28 @@
                 target.classList.add('active');
                 target.style.display = 'flex';
                 if(screenId === 'screen-camera') iniciarCamara();
+                else if (streamActivo && screenId !== 'screen-camera') {
+                    streamActivo.getTracks().forEach(t => t.stop());
+                    streamActivo = null;
+                }
             }
         }
 
-        // 3. Cámara
         async function iniciarCamara() {
             const video = document.getElementById('webcam');
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }, 
+                    video: { facingMode: "environment", width: { ideal: 1080 } }, 
                     audio: false 
                 });
                 video.srcObject = stream;
+                streamActivo = stream;
             } catch (err) {
                 alert("Error de cámara: " + err.message);
             }
         }
 
-        // 4. Captura
-        async function capturarPrenda() {
+        function capturarPrenda() {
             const video = document.getElementById('webcam');
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
@@ -226,9 +253,30 @@
             irA('screen-confirm');
         }
 
-        // 5. Procesamiento
         async function procesarBorradorFondo() {
-            alert("Enviando a la IA para borrar fondo...");
+            irA('screen-loading');
+            
+            try {
+                // LLAMADA REAL A LA API EN VERCEL
+                const response = await fetch('/api/borrar-fondo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: fotoBase64.split(',')[1] })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.imagenSinFondo) {
+                    document.getElementById('ia-output-preview').src = "data:image/png;base64," + data.imagenSinFondo;
+                    irA('screen-result-ia');
+                } else {
+                    alert("Error en el borrado: " + (data.detalle || "La IA no pudo procesar la imagen."));
+                    irA('screen-confirm');
+                }
+            } catch (err) {
+                alert("Error de conexión: " + err.message);
+                irA('screen-confirm');
+            }
         }
     </script>
 </body>
