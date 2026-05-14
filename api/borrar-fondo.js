@@ -19,7 +19,7 @@ export default async function handler(req, res) {
         const genAI = new GoogleGenerativeAI(apiKey);
         
         // Utilizamos el modelo especializado en entender y generar imágenes (Image-to-Image)
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image-preview" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
 
         // 3. Prompt de extracción semántica
         const prompt = `Task: Background Removal and Professional Garment Extraction.
