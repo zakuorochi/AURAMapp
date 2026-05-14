@@ -23,9 +23,9 @@ export default async function handler(req, res) {
 
         // 3. Prompt de extracción semántica
         const prompt = `Task: Background Removal and Professional Garment Extraction.
-        1. Localiza la prenda principal en la imagen.
-        2. Elimina absolutamente todo lo que no sea la prenda: fondo, suelo, manos, piel humana o perchas.
-        3. Si la prenda es vestida por alguien, remueve a la persona y deja solo la tela.
+        1. Localiza el conujto de prendas principales en la imagen.
+        2. Elimina absolutamente todo lo que no sea las prendas de vestir: fondo, suelo, manos, piel humana, cabezas, cabello o perchas.
+        3. Si la prenda es vestida por alguien, remueve a la persona y deja solo la tela pero respeta la postura de la prenda en la imagen, no reinterpretes la prenda ni afectes sus dimensiones o colores
         4. Devuelve la prenda con un recorte limpio y bordes suaves.
         5. La salida debe ser exclusivamente la imagen procesada con transparencia.`;
 
