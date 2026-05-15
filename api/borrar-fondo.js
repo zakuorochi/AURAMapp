@@ -21,14 +21,19 @@ export default async function handler(req, res) {
         // Utilizamos el modelo especializado en entender y generar imágenes (Image-to-Image)
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
 
-        // 3. Prompt de extracción semántica
-        const prompt = `Task: Background Removal and Professional Garment Extraction.
-        1. Localiza el conujto de prendas principales en la imagen.
-        2. Elimina absolutamente todo lo que no sea las prendas de vestir: fondo, suelo, manos, piel humana, cabezas, cabello o perchas.
-        3. Si la prenda es vestida por alguien, remueve a la persona y deja solo la tela pero respeta la postura de la prenda en la imagen, no reinterpretes la prenda ni afectes sus dimensiones o colores
-        4. Devuelve la prenda con un recorte limpio y bordes suaves.
-        5. La salida debe ser exclusivamente la imagen procesada con transparencia.`;
+         // 3. SÚPER PROMPT "GHOST MANNEQUIN"
+        // Instrucciones ultra-específicas para lograr el efecto de prenda vacía sin persona.
+        const prompt = `
+            Role: Expert E-commerce Product Image Retoucher.
+            Task: Create a perfect "Ghost Mannequin" (invisible mannequin) image from the provided photo.
 
+            STRICT EXECUTION STEPS:
+            1.  **Identify Garments:** Isolate all clothing items worn by the subject (shirt, pants, belt, etc.) as a single outfit unit.
+            2.  **HUMAN ERADICATION:** Completely erase ALL visible human parts: skin, hands, neck, head, arms, and legs. There must be NO human residue.
+            3.  **Interior Reconstruction:** Where the body was removed (neck opening, sleeve cuffs, waistband), reconstruct the interior fabric view to make the garment look hollow, as if worn by an invisible form.
+            4.  **Preserve Integrity:** Maintain the exact original shape, realistic fabric folds, shadows, wrinkles, and texture of the clothing. Do not flatten the image.
+            5.  **Final Output:** The isolated, hollowed-out garments on a 100% transparent background (PNG).
+        `;
         // 4. Envío de datos a la IA
         // Nota: 'image' ya llega como base64 puro desde el index.html
         const result = await model.generateContent({
