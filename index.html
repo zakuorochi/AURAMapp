@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AURAM | Capturador de Prendas</title>
+    <title>AURAM | Capturador de Catálogo</title>
     <style>
         :root {
             --cyan-auram: #00d1ff;
             --dark-bg: #050505;
-            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-bg: rgba(255, 255, 255, 0.05);
         }
 
         body, html {
             margin: 0; padding: 0;
             background-color: var(--dark-bg);
             color: #fff;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             height: 100vh;
             overflow: hidden;
         }
@@ -27,84 +27,34 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 40px;
+            padding: 20px;
             text-align: center;
-            transition: opacity 0.5s ease;
         }
 
-        .active { display: flex; opacity: 1; }
+        .active { display: flex; }
 
-        /* Estética de Logo */
-        .logo-container { margin-bottom: 30px; }
-        .logo-auram { width: 100px; filter: drop-shadow(0 0 15px rgba(0, 209, 255, 0.4)); }
-        .brand-name { 
-            font-weight: 200; 
-            letter-spacing: 10px; 
-            font-size: 1.2rem; 
-            color: #fff;
-            margin-top: 10px;
-        }
-
-        input {
-            background: var(--glass-bg);
-            border: 1px solid rgba(0, 209, 255, 0.2);
-            padding: 15px;
-            border-radius: 12px;
-            color: #fff;
-            outline: none;
-            text-align: center;
-            font-size: 0.9rem;
-            width: 100%;
-            max-width: 300px;
-            margin-bottom: 10px;
-        }
-
+        .logo-auram { width: 80px; margin-bottom: 10px; filter: drop-shadow(0 0 10px var(--cyan-auram)); }
+        
         .btn-auram {
             background: linear-gradient(135deg, #00d1ff, #0072ff);
-            color: #fff;
-            border: none;
-            padding: 18px;
-            border-radius: 30px;
-            font-weight: bold;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(0, 209, 255, 0.3);
-            font-size: 0.8rem;
-            width: 100%;
-            max-width: 300px;
+            color: #fff; border: none; padding: 16px 30px;
+            border-radius: 30px; font-weight: bold; letter-spacing: 2px;
+            text-transform: uppercase; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 209, 255, 0.3);
+            width: 100%; max-width: 280px;
         }
 
         .instruction-card {
             background: var(--glass-bg);
             border: 1px solid rgba(0, 209, 255, 0.1);
-            padding: 30px;
-            border-radius: 25px;
-            backdrop-filter: blur(10px);
-            max-width: 340px;
+            padding: 25px; border-radius: 20px;
+            backdrop-filter: blur(10px); max-width: 320px;
         }
 
-        .instruction-list {
-            text-align: left;
-            font-size: 0.75rem;
-            color: #bbb;
-            line-height: 1.8;
-            margin-bottom: 30px;
-            list-style: none;
-            padding: 0;
-        }
-
-        .instruction-list li::before {
-            content: "•";
-            color: var(--cyan-auram);
-            margin-right: 10px;
-            font-weight: bold;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        video, #photo-preview, #ia-output-preview {
+            width: 90%; max-width: 400px;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 209, 255, 0.3);
             background: #000;
         }
 
@@ -112,104 +62,105 @@
         .loader {
             border: 3px solid rgba(0,209,255,0.1);
             border-top: 3px solid var(--cyan-auram);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            border-radius: 50%; width: 45px; height: 45px;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Checkerboard para transparencia */
-        .preview-bg {
+        /* Fondo de cuadricula (transparencia) para verificar el PNG limpio */
+        .preview-checkerboard {
             background: url('https://www.transparenttextures.com/patterns/checkerboard.png');
-            background-color: #111;
-            border-radius: 15px;
+            background-color: #1a1a1a;
+            padding: 15px;
+            border-radius: 20px;
             border: 1px dashed var(--cyan-auram);
             width: 85%;
+            max-width: 400px;
             margin: 20px 0;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 250px;
         }
 
-        .bottom-nav { position: absolute; bottom: 50px; width: 100%; display: flex; justify-content: center; }
+        .bottom-nav { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; gap: 15px; }
+        
+        .tag-info {
+            font-size: 0.65rem;
+            color: var(--cyan-auram);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- FASE 1: LOGIN -->
+    <!-- 1. PANTALLA DE LOGIN -->
     <div id="screen-login" class="screen active" style="display: flex;">
-        <div class="logo-container">
-            <img src="logo-auram.png" class="logo-auram">
-            <div class="brand-name">AURAM APP</div>
-        </div>
-        <div class="login-box" style="display:flex; flex-direction:column; gap:10px; width:100%; align-items:center;">
-            <input type="text" placeholder="USUARIO" readonly value="ADMIN_TEST">
-            <input type="password" placeholder="CONTRASEÑA" readonly value="••••••••">
-            <button class="btn-auram" onclick="irA('screen-instructions')">Entrar</button>
-        </div>
+        <img src="logo-auram.png" class="logo-auram" onerror="this.src='https://www.auram.site/logo-auram.png'">
+        <h2 style="letter-spacing: 8px; font-weight: 200; margin-bottom: 30px;">AURAM APP</h2>
+        <button class="btn-auram" onclick="irA('screen-instructions')">Entrar</button>
     </div>
 
-    <!-- FASE 2: INSTRUCCIONES -->
+    <!-- 2. PANTALLA DE INSTRUCCIONES -->
     <div id="screen-instructions" class="screen">
         <div class="instruction-card">
-            <h2 style="color:var(--cyan-auram); font-weight:300; letter-spacing:3px; font-size:1rem; margin-bottom:20px;">REGLAS DE CAPTURA</h2>
-            <ul class="instruction-list">
-                <li>Coloca la prenda en una superficie plana y sólida.</li>
-                <li>Asegúrate de tener iluminación uniforme.</li>
-                <li>La cámara debe estar paralela a la prenda.</li>
-                <li>Evita arrugas en la tela.</li>
+            <h3 style="color:var(--cyan-auram); letter-spacing: 2px; margin-bottom: 15px;">CAPTURA PROFESIONAL</h3>
+            <ul style="text-align: left; font-size: 0.75rem; color: #ccc; line-height: 1.8; list-style: none; padding: 0;">
+                <li style="margin-bottom: 8px;">🔹 Foto desde arriba (Vista Cenital).</li>
+                <li style="margin-bottom: 8px;">🔹 Superficie o fondo liso uniforme.</li>
+                <li style="margin-bottom: 8px;">🔹 Buena iluminación, evita sombras fuertes.</li>
+                <li>🔹 Extiende la prenda para evitar arrugas.</li>
             </ul>
         </div>
         <div class="bottom-nav">
-            <button class="btn-auram" style="width: 200px;" onclick="irA('screen-camera')">Abrir Cámara</button>
+            <button class="btn-auram" onclick="irA('screen-camera')">Abrir Cámara</button>
         </div>
     </div>
 
-    <!-- FASE 3: CÁMARA -->
+    <!-- 3. PANTALLA DE LA CÁMARA -->
     <div id="screen-camera" class="screen" style="padding: 0;">
         <video id="webcam" autoplay playsinline muted></video>
         <div class="bottom-nav">
-            <button class="btn-auram" onclick="capturarPrenda()">Capturar Prenda</button>
+            <button class="btn-auram" onclick="capturarFoto()">Capturar Prenda</button>
         </div>
     </div>
 
-    <!-- FASE 4: CONFIRMACIÓN -->
+    <!-- 4. PANTALLA DE CONFIRMACIÓN -->
     <div id="screen-confirm" class="screen">
-        <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 3px;">¿ES ESTA LA PRENDA?</h3>
-        <img id="photo-preview" style="width: 80%; border-radius: 15px; border: 1px solid var(--cyan-auram); margin: 20px 0;">
-        <div style="display: flex; gap: 15px; width: 85%;">
-            <button class="btn-auram" style="flex:1; background: #333;" onclick="irA('screen-camera')">NO</button>
-            <button class="btn-auram" style="flex:1;" onclick="procesarBorradorFondo()">SÍ</button>
+        <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 2px;">¿LA FOTO ES CORRECTA?</h3>
+        <img id="photo-preview">
+        <div class="bottom-nav">
+            <button class="btn-auram" style="background:#333; width: 120px;" onclick="irA('screen-camera')">REPETIR</button>
+            <button class="btn-auram" style="width: 120px;" onclick="procesarBorradorFondo()">SÍ, PROCESAR</button>
         </div>
     </div>
 
-    <!-- FASE 5: RESULTADO IA -->
-    <div id="screen-result-ia" class="screen">
-        <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 3px;">VISTA PREVIA (SIN FONDO)</h3>
-        <div class="preview-bg">
+    <!-- 5. PANTALLA DE RESULTADO FINAL (PRENDA TRANSPARENTE PNG) -->
+    <div id="screen-result" class="screen">
+        <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 2px;">PRENDA DIGITALIZADA</h3>
+        <div class="preview-checkerboard">
             <img id="ia-output-preview" style="width: 100%; display: block;">
         </div>
-        <div style="display: flex; gap: 15px; width: 85%;">
-            <button class="btn-auram" style="flex:1; background: #333;" onclick="irA('screen-camera')">REPETIR</button>
-            <button class="btn-auram" style="flex:1;" onclick="alert('Digitalización completa. Guardando en catálogo...')">ACEPTAR</button>
+        <div id="garment-data" class="tag-info"></div>
+        <div class="bottom-nav">
+            <button class="btn-auram" style="background:#333; width: 120px;" onclick="irA('screen-camera')">NUEVA</button>
+            <button class="btn-auram" style="width: 120px;" onclick="alert('Digitalización exitosa. Datos listos para guardado permanente en Firestore/Bucket.')">GUARDAR</button>
         </div>
     </div>
 
-    <!-- PANTALLA DE CARGA -->
+    <!-- PANTALLA DE CARGA (DOBLE PROCESO UNIFICADO) -->
     <div id="screen-loading" class="screen" style="background: rgba(0,0,0,0.95); z-index: 10000;">
         <div class="loader"></div>
-        <div style="color:var(--cyan-auram); letter-spacing:3px; font-weight:bold; font-size:0.7rem;">ELIMINANDO FONDO...</div>
+        <!-- Corregido: Se agregaron las IDs exactas que busca el JavaScript para evitar errores de tipo Null -->
+        <p id="loading-text" style="color: var(--cyan-auram); font-size: 0.75rem; letter-spacing: 3px; font-weight: bold; margin-top: 20px; text-transform: uppercase;">PROCESANDO PRENDA...</p>
+        <p id="loading-subtext" style="color: #666; font-size: 0.65rem; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px;">PREPARANDO MOTOR IA...</p>
     </div>
 
     <script>
-        let fotoBase64 = null;
-        let streamActivo = null;
+        // Declaración única de variables globales (Previene colisión de variables)
+        let fotoOriginalBase64 = "";
+        let stream = null;
 
         function irA(screenId) {
+            console.log("Navegando a pantalla:", screenId);
             document.querySelectorAll('.screen').forEach(s => {
                 s.classList.remove('active');
                 s.style.display = 'none';
@@ -219,100 +170,118 @@
             if (target) {
                 target.classList.add('active');
                 target.style.display = 'flex';
-                if(screenId === 'screen-camera') iniciarCamara();
-                else if (streamActivo && screenId !== 'screen-camera') {
-                    streamActivo.getTracks().forEach(t => t.stop());
-                    streamActivo = null;
+                
+                if (screenId === 'screen-camera') {
+                    encenderCamara();
+                } else if (stream) {
+                    // Detener la cámara para ahorrar recursos de batería si no estamos en pantalla de captura
+                    stream.getTracks().forEach(t => t.stop());
+                    stream = null;
                 }
             }
         }
 
-        async function iniciarCamara() {
+        async function encenderCamara() {
             const video = document.getElementById('webcam');
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment", width: { ideal: 1080 } }, 
-                    audio: false 
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment", width: { ideal: 1280 } },
+                    audio: false
                 });
                 video.srcObject = stream;
-                streamActivo = stream;
-            } catch (err) {
-                alert("Error de cámara: " + err.message);
+            } catch (e) { 
+                console.error("Error de cámara:", e);
+                alert("Error de cámara. Asegúrate de estar usando el enlace seguro HTTPS de Vercel."); 
             }
         }
 
-        function capturarPrenda() {
-            const video = document.getElementById('webcam');
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
+        function capturarFoto() {
+            const v = document.getElementById('webcam');
+            const c = document.createElement('canvas');
+            c.width = v.videoWidth; 
+            c.height = v.videoHeight;
+            c.getContext('2d').drawImage(v, 0, 0);
             
-            fotoBase64 = canvas.toDataURL('image/jpeg', 0.8);
-            document.getElementById('photo-preview').src = fotoBase64;
+            // Extraer la porción limpia base64 sin encabezados de datos URL
+            fotoOriginalBase64 = c.toDataURL('image/jpeg', 0.8).split(',')[1];
+            
+            // Mostrar la vista previa en la pantalla de confirmación
+            document.getElementById('photo-preview').src = "data:image/jpeg;base64," + fotoOriginalBase64;
             irA('screen-confirm');
         }
 
-    // Variable para guardar el resultado del primer paso
-let prendaLimpiaTemporal = null;
+        // FUNCIÓN CLAVE: Ejecuta en paralelo el borrado y clasificación sin trabar la interfaz
+        async function procesarBorradorFondo() {
+            const loadingScreen = document.getElementById('screen-loading');
+            const loadingText = document.getElementById('loading-text');
+            const loadingSub = document.getElementById('loading-subtext');
 
-async function procesarBorradorFondo() {
-    irA('screen-loading');
-    document.querySelector('#screen-loading p').innerText = "BORRANDO FONDO...";
-    
-    try {
-        const response = await fetch('/api/borrar-fondo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: fotoBase64 })
-        });
+            // Mostrar el overlay de carga de manera explícita
+            if (loadingScreen) {
+                loadingScreen.style.display = 'flex';
+                loadingScreen.classList.add('active');
+            }
 
-        const data = await response.json();
+            // Cambiar textos dinámicos del paso 1
+            if (loadingText) loadingText.innerText = "PASO 1: EXTRACCIÓN DE PRENDA";
+            if (loadingSub) loadingSub.innerText = "Identificando silueta y removiendo fondo...";
 
-        if (data.success && data.imagenSinFondo) {
-            prendaLimpiaTemporal = data.imagenSinFondo; // Guardamos para el segundo paso
-            document.getElementById('ia-output-preview').src = "data:image/png;base64," + data.imagenSinFondo;
-            irA('screen-result-ia');
-        } else {
-            alert("Error: " + data.detalle);
-            irA('screen-confirm');
+            try {
+                // --- LLAMADA PASO 1 (api/borrar-fondo.js) ---
+                const res1 = await fetch('/api/borrar-fondo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: fotoOriginalBase64 })
+                });
+
+                if (!res1.ok) throw new Error("Fallo en la comunicación del Paso 1 con el servidor.");
+                const data1 = await res1.json();
+                
+                if (!data1.success || !data1.imagenSinFondo) {
+                    throw new Error(data1.detalle || "La IA no logró aislar la prenda correctamente.");
+                }
+
+                // Cambiar textos dinámicos para el paso 2
+                if (loadingText) loadingText.innerText = "PASO 2: ACABADO PROFESIONAL";
+                if (loadingSub) loadingSub.innerText = "Limpiando transparencias y detectando metadatos...";
+
+                // --- LLAMADA PASO 2 (api/generar-catalogo.js) ---
+                const res2 = await fetch('/api/generar-catalogo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: data1.imagenSinFondo })
+                });
+
+                if (!res2.ok) throw new Error("Fallo en el refinamiento del Paso 2 con el servidor.");
+                const data2 = await res2.json();
+
+                if (data2.success && data2.finalImage) {
+                    // Colocar el PNG final transparente en el preview
+                    document.getElementById('ia-output-preview').src = "data:image/png;base64," + data2.finalImage;
+                    
+                    // Imprimir datos detectados de manera automática
+                    document.getElementById('garment-data').innerText = `${data2.category} | ${data2.color} | ID SUGERIDO: ${data2.suggestedCode}`;
+                    
+                    // Ocultar pantalla de carga e ir al resultado
+                    if (loadingScreen) {
+                        loadingScreen.style.display = 'none';
+                        loadingScreen.classList.remove('active');
+                    }
+                    irA('screen-result');
+                } else {
+                    throw new Error(data2.detalle || "Fallo en el procesamiento de acabado final.");
+                }
+
+            } catch (err) {
+                // Ocultar pantalla de carga en caso de error para no bloquear la pantalla del usuario
+                if (loadingScreen) {
+                    loadingScreen.style.display = 'none';
+                    loadingScreen.classList.remove('active');
+                }
+                alert("ERROR DE PROCESAMIENTO:\n" + err.message);
+                irA('screen-confirm');
+            }
         }
-    } catch (err) {
-        alert("Error de conexión etapa 1");
-        irA('screen-confirm');
-    }
-}
-
-// NUEVA FUNCIÓN: Segundo paso para acabado profesional y clasificación
-async function finalizarDigitalizacion() {
-    irA('screen-loading');
-    document.querySelector('#screen-loading p').innerText = "GENERANDO ACABADO PROFESIONAL...";
-
-    try {
-        const response = await fetch('/api/generar-catalogo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: prendaLimpiaTemporal })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            // Aquí ya tenemos la prenda perfecta estilo B001.png
-            document.getElementById('ia-output-preview').src = "data:image/png;base64," + data.finalImage;
-            
-            // Mostramos los datos detectados
-            alert(`Prenda clasificada: ${data.category} - Color: ${data.color}\nCódigo asignado: ${data.suggestedCode}`);
-            
-            // Aquí ya podríamos mandarlo al Bucket definitivo
-            irA('screen-result-ia'); 
-            alert("¡Proceso de Catálogo completado con éxito!");
-        }
-    } catch (err) {
-        alert("Error en el refinamiento final");
-        irA('screen-result-ia');
-    }
-}
     </script>
 </body>
 </html>
