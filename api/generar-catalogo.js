@@ -13,7 +13,7 @@ export default async function handler(req, res) {
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         // Usamos la versión de alta fidelidad para el acabado final
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image-preview" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
 
         const prompt = `
             Task: Professional Catalog Finish (Ghost Mannequin Effect).
