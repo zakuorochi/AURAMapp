@@ -23,18 +23,19 @@ export default async function handler(req, res) {
 
          // 3. SÚPER PROMPT "GHOST MANNEQUIN"
         // Instrucciones ultra-específicas para lograr el efecto de prenda vacía sin persona.
-        const prompt = `
-            Role: Expert E-commerce Product Image Retoucher.
-            Task: Create a perfect "Ghost Mannequin" (invisible mannequin) image from the provided photo.
+       const prompt = `
+            Task: Surgical Background and Human Removal with Absolute Pixel Preservation.
+            
+            Objective: Extract the central garment with 100% fidelity. Do NOT redraw, morph, or modify the clothing.
 
-            STRICT EXECUTION STEPS:
-            1.  **Identify Garments:** Isolate all clothing items worn by the subject (shirt, pants, belt, etc.) as a single outfit unit.
-            2.  **HUMAN ERADICATION:** Completely erase ALL visible human parts: skin, hands, neck, head, arms, and legs. There must be NO human residue.
-            3.  **Interior Reconstruction:** Where the body was removed (neck opening, sleeve cuffs, waistband), reconstruct the interior fabric view to make the garment look hollow, as if worn by an invisible form.
-            4.  **Preserve Integrity:** Maintain the exact original shape, realistic fabric folds, shadows, wrinkles, and texture of the clothing. Do not flatten the image.
-            5.  **Final Output:** The isolated, hollowed-out garments on a 100% transparent background (PNG).
+            STRICT CONSTRAINT RULES:
+            1. **No Hallucinations / No Redrawing**: Do NOT alter, redraw, smooth, or modify the texture, folds, wrinkles, buttons, zippers, or logos of the garment. Every pixel of the garment must remain identical to the original photo.
+            2. **No Deformations**: Keep the exact physical shape, sleeves, collar structure, and contours. Do NOT shorten, lengthen, or delete sleeves or parts of the garment.
+            3. **Strict Masking (Surgical Cut)**: 
+               - Set all background, floor, hanger, and shadows pixels to 100% transparent.
+               - Set all human skin, hands, arms, neck, and head pixels to 100% transparent.
+            4. **Output**: Return ONLY the untouched extracted garment on a 100% transparent PNG background.
         `;
-        // 4. Envío de datos a la IA
         // Nota: 'image' ya llega como base64 puro desde el index.html
         const result = await model.generateContent({
             contents: [{
