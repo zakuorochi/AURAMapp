@@ -253,31 +253,66 @@
             irA('screen-confirm');
         }
 
-        async function procesarBorradorFondo() {
-            irA('screen-loading');
-            
-            try {
-                // LLAMADA REAL A LA API EN VERCEL
-                const response = await fetch('/api/borrar-fondo', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: fotoBase64.split(',')[1] })
-                });
+    // Variable para guardar el resultado del primer paso
+let prendaLimpiaTemporal = null;
 
-                const data = await response.json();
+async function procesarBorradorFondo() {
+    irA('screen-loading');
+    document.querySelector('#screen-loading p').innerText = "BORRANDO FONDO...";
+    
+    try {
+        const response = await fetch('/api/borrar-fondo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: fotoBase64 })
+        });
 
-                if (data.success && data.imagenSinFondo) {
-                    document.getElementById('ia-output-preview').src = "data:image/png;base64," + data.imagenSinFondo;
-                    irA('screen-result-ia');
-                } else {
-                    alert("Error en el borrado: " + (data.detalle || "La IA no pudo procesar la imagen."));
-                    irA('screen-confirm');
-                }
-            } catch (err) {
-                alert("Error de conexión: " + err.message);
-                irA('screen-confirm');
-            }
+        const data = await response.json();
+
+        if (data.success && data.imagenSinFondo) {
+            prendaLimpiaTemporal = data.imagenSinFondo; // Guardamos para el segundo paso
+            document.getElementById('ia-output-preview').src = "data:image/png;base64," + data.imagenSinFondo;
+            irA('screen-result-ia');
+        } else {
+            alert("Error: " + data.detalle);
+            irA('screen-confirm');
         }
+    } catch (err) {
+        alert("Error de conexión etapa 1");
+        irA('screen-confirm');
+    }
+}
+
+// NUEVA FUNCIÓN: Segundo paso para acabado profesional y clasificación
+async function finalizarDigitalizacion() {
+    irA('screen-loading');
+    document.querySelector('#screen-loading p').innerText = "GENERANDO ACABADO PROFESIONAL...";
+
+    try {
+        const response = await fetch('/api/generar-catalogo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: prendaLimpiaTemporal })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Aquí ya tenemos la prenda perfecta estilo B001.png
+            document.getElementById('ia-output-preview').src = "data:image/png;base64," + data.finalImage;
+            
+            // Mostramos los datos detectados
+            alert(`Prenda clasificada: ${data.category} - Color: ${data.color}\nCódigo asignado: ${data.suggestedCode}`);
+            
+            // Aquí ya podríamos mandarlo al Bucket definitivo
+            irA('screen-result-ia'); 
+            alert("¡Proceso de Catálogo completado con éxito!");
+        }
+    } catch (err) {
+        alert("Error en el refinamiento final");
+        irA('screen-result-ia');
+    }
+}
     </script>
 </body>
 </html>
