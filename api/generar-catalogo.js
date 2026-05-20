@@ -1,104 +1,73 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
-    // 1. Configuración de cabeceras CORS
+    // 1. Configuración de cabeceras CORS para permitir la conexión desde la App
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    // Valores por defecto (Sistema de Rescate) en caso de que todo falle
-    let category = "Prenda";
-    let color = "Multicolor";
-    let suggestedCode = "B001";
-
     try {
-        const { image } = req.body;
-        if (!image) throw new Error("No se recibieron datos de imagen en el Paso 2.");
+        // Corrección del error 'undefined': Parseo seguro del cuerpo de la petición
+        const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        const { image } = body;
 
-        // Limpieza de cualquier cabecera Base64 residual antes de enviar a Gemini
+        if (!image) {
+            throw new Error("No se recibieron datos de imagen en el Paso 2.");
+        }
+
+        // Limpieza de cabeceras Base64
         const cleanBase64 = image.replace(/^data:image\/\w+;base64,/, "");
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        // Usamos el modelo ultra-veloz gemini-2.0-flash
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
+        // Usamos el modelo especializado en edición y generación de imágenes (Image-to-Image)
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-2.5-flash-image" 
+        });
 
-        const prompt = `
-            Task: Analyze the provided transparent garment image for catalog classification.
-            
-            Instructions:
-            1. Look closely at the clothing item.
-            2. Identify its category (e.g., Blazer, Camisa, Jeans, Vestido, Casaca, Chompa).
-            3. Identify its dominant color in Spanish.
-            4. Generate a unique sequential product code starting with B (e.g., B001, B002).
+        // PROMPT DEFINITIVO: Efecto Sticker de Catálogo Profesional (Igual a B003a.png)
+        const prompt = `Task: Professional Catalog Sticker Creation (Ghost Mannequin Cut).
+        
+        1. Take the provided garment image and transform it into a premium, retail-ready product cutout.
+        2. Clean up and refine the edges, making them perfectly smooth, sharp, and continuous.
+        3. Ensure there is a 100% solid transparent background (alpha channel PNG mask). No loose pixels or halo artifacts.
+        4. Preserve 100% of the original colors, patterns, textures, fabric folds, and details of the clothing. Do not warp, modify, or redesign the garment.
+        5. Reconstruct any remaining small gaps near necklines or sleeves to give it a clean "hollow-out" (ghost mannequin) appearance.
+        6. Return ONLY the final refined garment image with transparent background.`;
 
-            Return STRICTLY a JSON block with this structure:
-            {
-              "category": "category_name",
-              "color": "main_color",
-              "suggestedCode": "B00X"
-            }
-        `;
+        const parts = [
+            { text: prompt },
+            { inlineData: { data: cleanBase64, mimeType: "image/png" } }
+        ];
 
+        // Ejecución directa en modalidad de imagen (Evita el error de JSON Mode)
         const result = await model.generateContent({
-            contents: [{
-                role: "user",
-                parts: [
-                    { text: prompt },
-                    { inlineData: { mimeType: "image/png", data: cleanBase64 } }
-                ]
-            }],
+            contents: [{ role: "user", parts }],
             generationConfig: {
-                responseMimeType: "application/json",
-                temperature: 0.1
+                responseModalities: ["IMAGE"],
+                temperature: 0.1 
             }
         });
 
         const response = await result.response;
-        const textResponse = response.text();
+        const imagePart = response.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
 
-        // Limpieza quirúrgica de bloques de código Markdown del JSON
-        const jsonString = textResponse.replace(/```json|```/gi, '').trim();
-
-        try {
-            const dataIA = JSON.parse(jsonString);
-            category = dataIA.category || category;
-            color = dataIA.color || color;
-            suggestedCode = dataIA.suggestedCode || suggestedCode;
-        } catch (parseErr) {
-            console.warn("Fallo al parsear JSON de Gemini. Extrayendo por expresión regular...");
-            
-            // Intento de extracción por Regex si el JSON viene con detalles menores de formato
-            const catMatch = jsonString.match(/"category"\s*:\s*"([^"]+)"/i);
-            if (catMatch) category = catMatch[1];
-
-            const colMatch = jsonString.match(/"color"\s*:\s*"([^"]+)"/i);
-            if (colMatch) color = colMatch[1];
-
-            const codeMatch = jsonString.match(/"suggestedCode"\s*:\s*"([^"]+)"/i);
-            if (codeMatch) suggestedCode = codeMatch[1];
+        if (imagePart && imagePart.inlineData) {
+            // Devolvemos la imagen final optimizada de catálogo en Base64
+            return res.status(200).json({ 
+                success: true,
+                finalImage: imagePart.inlineData.data
+            });
+        } else {
+            throw new Error("La IA no pudo procesar el renderizado final del sticker.");
         }
 
-        // Devolución exitosa con datos estructurados
-        return res.status(200).json({ 
-            success: true, 
-            category,
-            color,
-            suggestedCode
-        });
-
     } catch (err) {
-        console.error("METADATA RECOVERY SERVICE:", err.message);
-        
-        // El seguro de vida de AURAM: Si el API de Google cae o supera cuotas, 
-        // devolvemos un estado exitoso con datos de emergencia en lugar de un error 500.
-        return res.status(200).json({ 
-            success: true, 
-            category: "Prenda de Boutique",
-            color: "Estilo Único",
-            suggestedCode: "B001",
-            note: "Modo de recuperación activado automáticamente."
+        console.error("GENERAR CATALOGO ERROR:", err.message);
+        return res.status(500).json({ 
+            isError: true, 
+            detalle: err.message 
         });
     }
 }
