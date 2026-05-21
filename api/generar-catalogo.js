@@ -32,17 +32,14 @@ export default async function handler(req, res) {
         CRITICAL GOAL: Transform the wearing garments into an empty 3D shell of clothing. The human body must be completely erased.
 
         INSTRUCTIONS:
-        1. **HUMAN BODY ELIMINATION (100% Transparent)**: Identify and completely erase ALL visible parts of the human body:
-           - Remove the head, hair, face, ears, and neck.
-           - Remove the hands, fingers, wrists, and bare arms.
-           - Remove feet, ankles, and any exposed skin.
-           - Replace all human body parts with 100% transparent space (alpha channel).
-           
-        2. **Hollow-Out Openings**: Reconstruct the inner back collar (neckline), sleeve cuffs, and bottom hems to look realistically hollow, open, and empty, as if worn by an invisible phantom form (Ghost Mannequin effect, like a hollow 3D shell of clothes).
+       Task: Professional Full-Outfit Catalog Sticker Creation.
         
-        3. **Full Outfit Preservation**: Isolate and keep the entire clothing outfit (both top jackets/sweaters AND bottom pants/jeans). Keep their folds, textures, colors, and natural shape untouched.
-        
-        4. **Sticker Edge Refinement**: Polish the outer edges of the empty clothing shell to create a clean, sharp, continuous border against the transparent background. Ensure no loose pixels or human skin halos remain.
+        1. **Outfit Extraction (Upper + Lower)**: Isolate and extract the ENTIRE clothing set. This includes BOTH upper garments (shirts, t-shirts, jackets, blazers) AND lower garments (pants, trousers, jeans, skirts, shorts) as a single unified outfit entity.
+        2. Do NOT cut off or ignore the bottom garments (pants/jeans). Keep both top and bottom fully visible and connected.
+        3. **Sticker-Edge Sharpness**: Refine the outer boundaries of the entire outfit. Make the borders perfectly smooth, clean, and continuous, eliminating any feathered or loose semi-transparent pixels (zero halo artifacts).
+        4. **Zero Alterations**: Preserve 100% of the original colors, patterns, textures, fabric folds, and details of the clothing. Do not warp, modify, or redraw the clothes.
+        5. Ensure the final background is 100% solid transparent (alpha channel PNG mask).
+        6. Return ONLY the final high-quality processed outfit sticker image with transparent background                                Q
 
         Return ONLY the final processed hollow outfit shell with a perfectly transparent background (PNG).`;
 
