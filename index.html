@@ -135,7 +135,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            touch-action: none; /* Deshabilita gestos del navegador nativos para evitar rebote */
+            touch-action: none;
         }
 
         #final-fusion-preview {
@@ -273,7 +273,7 @@
         </div>
 
         <div class="bottom-nav" style="flex-direction: column; align-items: center; bottom: 30px; width: 85%;">
-            <!-- Botón Maestro de Fusión (Desbloqueado cuando todo está listo) -->
+            <!-- Botón Maestro de Fusión -->
             <button id="btn-iniciar-fusion" class="btn-auram" style="width: 100%;" disabled onclick="iniciarFusionTryOn()">✨ FUSIONAR PRENDA</button>
         </div>
     </div>
@@ -323,8 +323,8 @@
             }
         }
 
-        // COMPRESIÓN CLIENT-SIDE PARA PREVENIR EL ERROR 413 DE VERCEL
-        function comprimirBase64(base64Str, maxDimension = 850, isPng = false) {
+        // COMPRESIÓN OPTIMIZADA CLIENT-SIDE (CALIBRADA PARA MÁXIMA NITIDEZ)
+        function comprimirBase64(base64Str, maxDimension = 1200, isPng = false) {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => {
@@ -332,6 +332,7 @@
                     let w = img.width;
                     let h = img.height;
                     
+                    // Escala proporcional inteligente
                     if (w > h) {
                         if (w > maxDimension) { h = Math.round(h * maxDimension / w); w = maxDimension; }
                     } else {
@@ -342,6 +343,10 @@
                     canvas.height = h;
                     const ctx = canvas.getContext('2d');
                     
+                    // MEJORA TÉCNICA 1: Activación de algoritmos de suavizado de bordes de alta fidelidad
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    
                     if (isPng) {
                         ctx.clearRect(0, 0, w, h);
                     } else {
@@ -351,8 +356,9 @@
                     
                     ctx.drawImage(img, 0, 0, w, h);
                     
+                    // MEJORA TÉCNICA 2: Subida de calidad de compresión a 0.88 (evita artefactos visuales)
                     const format = isPng ? 'image/png' : 'image/jpeg';
-                    const quality = isPng ? 1.0 : 0.75;
+                    const quality = isPng ? 1.0 : 0.88;
                     resolve(canvas.toDataURL(format, quality).split(',')[1]);
                 };
                 img.src = (base64Str.startsWith('data:') ? '' : 'data:image/jpeg;base64,') + base64Str;
@@ -379,11 +385,16 @@
             }
         }
 
+        // MEJORA TÉCNICA 3: Solicitud de flujo de video en Full HD (1080p) real
         async function encenderCamaraPrenda() {
             const video = document.getElementById('webcam-garment');
             try {
                 streamPrenda = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment", width: { ideal: 1280 } },
+                    video: { 
+                        facingMode: "environment", 
+                        width: { ideal: 1920, min: 1280 }, 
+                        height: { ideal: 1080, min: 720 } 
+                    },
                     audio: false
                 });
                 video.srcObject = streamPrenda;
@@ -403,11 +414,17 @@
         function capturarPrenda() {
             const v = document.getElementById('webcam-garment');
             const c = document.createElement('canvas');
+            
+            // Captura a resolución nativa del sensor (máxima calidad disponible)
             c.width = v.videoWidth; 
             c.height = v.videoHeight;
-            c.getContext('2d').drawImage(v, 0, 0);
+            const ctx = c.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(v, 0, 0);
             
-            fotoPrendaOriginal = c.toDataURL('image/jpeg', 0.8).split(',')[1];
+            // Guardamos con compresión suave inicial
+            fotoPrendaOriginal = c.toDataURL('image/jpeg', 0.92).split(',')[1];
             document.getElementById('photo-preview').src = "data:image/jpeg;base64," + fotoPrendaOriginal;
             irA('screen-confirm-garment');
         }
@@ -423,7 +440,8 @@
                 reader.onload = async function(e) {
                     const rawBase64 = e.target.result.split(',')[1];
                     
-                    fotoUsuarioBase64 = await comprimirBase64(rawBase64, 850, false);
+                    // Comprimimos la foto del usuario a 1200px con excelente definición
+                    fotoUsuarioBase64 = await comprimirBase64(rawBase64, 1200, false);
                     
                     document.getElementById('user-placeholder').style.display = 'none';
                     const userPreview = document.getElementById('user-preview');
@@ -453,8 +471,10 @@
             if (loadingSub) loadingSub.innerText = "Optimizando y aislando silueta con IA...";
 
             try {
-                const prendaComprimida = await comprimirBase64(fotoPrendaOriginal, 850, false);
+                // Comprimir la prenda para el Paso 1 preservando nitidez
+                const prendaComprimida = await comprimirBase64(fotoPrendaOriginal, 1200, false);
 
+                // LLAMADA AL PASO 1 (Aislamiento quirúrgico)
                 const res1 = await fetch('/api/borrar-fondo', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -475,6 +495,7 @@
 
                 irA('screen-tryon-setup');
                 
+                // Ejecutar Paso 2 en segundo plano
                 ejecutarPaso2SegundoPlano(data1.imagenSinFondo);
 
             } catch (err) {
@@ -492,6 +513,7 @@
             const bgLoader = document.getElementById('bg-loader');
 
             try {
+                // LLAMADA AL PASO 2 (Generar Sticker Estético y Delineado)
                 const res2 = await fetch('/api/generar-catalogo', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -501,7 +523,8 @@
                 const data2 = await res2.json();
 
                 if (data2.success && data2.finalImage) {
-                    stickerProcesadoBase64 = await comprimirBase64(data2.finalImage, 850, true);
+                    // Refinamiento final del sticker en PNG conservando transparencia de alta gama
+                    stickerProcesadoBase64 = await comprimirBase64(data2.finalImage, 1200, true);
                     stickerListo = true;
                     
                     if (bgStatus) bgStatus.innerText = "🎨 Sticker estético A001 perfeccionado";
@@ -516,7 +539,7 @@
                 }
             } catch (e) {
                 console.warn("Fallo refinamiento de segundo plano. Usando imagen Paso 1 como respaldo.");
-                stickerProcesadoBase64 = await comprimirBase64(imagenPaso1, 850, true);
+                stickerProcesadoBase64 = await comprimirBase64(imagenPaso1, 1200, true);
                 stickerListo = true;
                 if (bgStatus) bgStatus.innerText = "✅ Prenda lista para probar (Modo Respaldo)";
                 verificarRequisitosTryOn();
@@ -600,12 +623,10 @@
                     return;
                 }
                 
-                // Convertir Base64 a blob binario
                 const response = await fetch(base64Data);
                 const blob = await response.blob();
                 const file = new File([blob], 'auram-tryon.png', { type: 'image/png' });
                 
-                // Intentar el método de compartir archivos nativo del celular
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     await navigator.share({
                         files: [file],
@@ -613,13 +634,11 @@
                         text: '¡Mira cómo me queda esta prenda en AURAM.site!'
                     });
                 } else if (navigator.share) {
-                    // Compartir enlace de soporte si no puede compartir el binario directamente
                     await navigator.share({
                         title: 'Mi Vestidor AURAM',
                         text: '¡Prueba la experiencia de vestidor virtual en AURAM.site!'
                     });
                 } else {
-                    // Fallback definitivo: Descarga forzada del archivo
                     const link = document.createElement('a');
                     link.href = base64Data;
                     link.download = 'auram-probador.png';
@@ -630,7 +649,6 @@
                 }
             } catch (e) {
                 console.error("Error sharing:", e);
-                // Forzar descarga directa si el navegador del iframe bloquea el Share API
                 const link = document.createElement('a');
                 link.href = document.getElementById('final-fusion-preview').src;
                 link.download = 'auram-probador.png';
@@ -641,7 +659,7 @@
             }
         }
 
-        // --- SISTEMA DE CONTROL DE PINCH & ZOOM (ESTILO WHATSAPP) ---
+        // --- SISTEMA DE CONTROL DE PINCH & ZOOM ---
         let scale = 1;
         let lastScale = 1;
         let startX = 0, startY = 0;
@@ -654,7 +672,6 @@
             const container = document.getElementById('zoom-container');
             const img = document.getElementById('final-fusion-preview');
             
-            // Restablecer valores de zoom de ejecuciones anteriores
             scale = 1;
             lastScale = 1;
             posX = 0;
@@ -665,18 +682,15 @@
 
             if (!container || !img) return;
 
-            // Función auxiliar para medir la distancia entre dos puntos táctiles
             function getDistance(t1, t2) {
                 return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
             }
 
             container.addEventListener('touchstart', (e) => {
                 if (e.touches.length === 2) {
-                    // Gesto de pinza iniciado
                     initialPinchDistance = getDistance(e.touches[0], e.touches[1]);
                     lastScale = scale;
                 } else if (e.touches.length === 1) {
-                    // Gesto de arrastre de un dedo iniciado
                     isDragging = true;
                     startX = e.touches[0].clientX - posX;
                     startY = e.touches[0].clientY - posY;
@@ -685,14 +699,12 @@
 
             container.addEventListener('touchmove', (e) => {
                 if (e.touches.length === 2) {
-                    // Procesar ampliación de dos dedos
                     const currentDistance = getDistance(e.touches[0], e.touches[1]);
                     const factor = currentDistance / initialPinchDistance;
-                    scale = Math.min(Math.max(lastScale * factor, 1), 4); // Limitar zoom entre 1x y 4x
+                    scale = Math.min(Math.max(lastScale * factor, 1), 4);
                     
                     aplicarLimitesDeNavegacion();
                 } else if (e.touches.length === 1 && isDragging && scale > 1) {
-                    // Procesar desplazamiento de bordes con la imagen ampliada
                     posX = e.touches[0].clientX - startX;
                     posY = e.touches[0].clientY - startY;
                     
@@ -709,24 +721,19 @@
                 lastPosY = posY;
             });
 
-            // Función crítica que frena el movimiento en los bordes para que no se pierda la foto
             function aplicarLimitesDeNavegacion() {
                 if (scale === 1) {
                     posX = 0;
                     posY = 0;
                 } else {
                     const parentRect = container.getBoundingClientRect();
-                    
-                    // Cálculo dinámico del límite de arrastre según el nivel de zoom
                     const limitX = (parentRect.width * (scale - 1)) / 2;
                     const limitY = (parentRect.height * (scale - 1)) / 2;
                     
-                    // Fijar límites estricto en el eje X e Y
                     posX = Math.min(Math.max(posX, -limitX), limitX);
                     posY = Math.min(Math.max(posY, -limitY), limitY);
                 }
                 
-                // Aplicar transformaciones mediante hardware para fluidez cinemática (60FPS)
                 img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
             }
         }
