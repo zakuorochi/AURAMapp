@@ -11,21 +11,19 @@ export default async function handler(req, res) {
 
     try {
         const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-        // AGREGADO: Extraemos garmentBase64 para dar soporte a la fusión de rescate inmediata
+        // Extraemos garmentBase64 para dar soporte a la fusión de rescate inmediata (comprimida)
         const { image, codigo, genero, assetsFolder, garmentBase64 } = body;
 
         if (!image) {
-            throw new Error("Faltan datos críticos: imagen del usuario para la fusión.");
+            return res.status(400).json({ isError: true, detalle: "Faltan datos críticos: imagen del usuario para la fusión." });
         }
 
         const cleanUserImage = image.replace(/^data:image\/\w+;base64,/, "");
         let finalGarmentBase64 = "";
 
         // --- SISTEMA DE RESCATE INTELIGENTE ---
-        // Si el cliente nos pasa la imagen procesada directamente (garmentBase64), evitamos la descarga 
-        // de Storage y realizamos una fusión instantánea. Esto es genial para pruebas locales e inmediatas.
         if (garmentBase64) {
-            console.log("AURAM LOG: Procesando fusión directa usando Base64 de segundo plano.");
+            console.log("AURAM LOG: Procesando fusión directa usando Base64 de segundo plano optimizado.");
             finalGarmentBase64 = garmentBase64.replace(/^data:image\/\w+;base64,/, "");
         } else {
             // De lo contrario, realizamos la descarga clásica y segura del Storage Bucket
