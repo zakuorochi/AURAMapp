@@ -27,20 +27,32 @@ export default async function handler(req, res) {
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
 
         // 3. PROMPT ULTRA-ESPECÍFICO PARA EXTRACCIÓN GHOST MANNEQUIN COMPLETA
-        const prompt = `Task: Surgical Outfit Extraction and Absolute Human Removal (Ghost Mannequin).
+    const prompt = `
+        [TASK TYPE]: Strict Image Segmentation & Alpha-Masking (Chroma-Key). No generative drawing.
+        
+        [OBJECTIVE]: Extract the ENTIRE clothing outfit (both top garments like jackets, shirts, hoodies AND bottom garments like pants, jeans, skirts, shorts) as a single connected hollow 3D shell. Completely erase the person wearing them and the background.
 
-CRITICAL MISSION:
-You must extract the ENTIRE clothing outfit (both top garments like jackets, shirts, hoodies AND bottom garments like pants, jeans, skirts) as a single connected empty 3D shell. You must completely and cleanly erase the person wearing them.
+        [STRICT HUMAN BODY ERADICATION RULES]:
+        - Identify and set all pixels containing human skin, flesh, or anatomy to 100% transparent alpha (rgba 0,0,0,0).
+        - Cleanly remove: Head, face, hair, ears, neck, throat, collarbones.
+        - Cleanly remove: Bare arms, elbows, forearms, wrists, hands, and fingers.
+        - Cleanly remove: Bare legs, ankles, feet, and toes.
+        - CRITICAL: If a hand, wrist, or neck overlaps or touches the garment, surgically crop and mask out the skin pixels. Do NOT allow skin-color or skin-texture bleed into the clothing boundary.
 
-STRICT INSTRUCTIONS:
-1. **100% Body Erasure (Transparency)**: Completely replace ALL visible parts of the human body with 100% transparent space (alpha channel):
-   - Erase the head, face, hair, ears, and neck.
-   - Erase the hands, fingers, bare arms, and wrists.
-   - Erase the feet, ankles, legs, and any other exposed skin.
-2. **Hollow Openings (Efecto Fantasma)**: Reconstruct the inner collar opening, sleeve cuffs, and bottom hems to look realistically hollow, open, and empty, as if worn by an invisible phantom form.
-3. **Outfit Unity**: Keep both upper and lower garments visible and connected. Do NOT cut off, ignore, or separate the pants/bottom garments.
-4. **No Alucinations / No Alterations**: Preserve 100% of the original colors, patterns, fabric folds, wrinkles, seams, and details of the clothing. Do NOT warp, modify, or redraw the clothes.
-5. **Output**: Return ONLY the final hollow clothing outfit shell on a perfectly transparent background.`;
+        [HOLLOW GHOST MANNEQUIN SHELL SPECIFICATIONS]:
+        - For openings where anatomy emerged (necklines, sleeve cuffs, pant cuffs):
+          1. Clean out the skin inside the hole.
+          2. Leave the opening hollow, open, and empty as a 3D shell of clothing worn by an invisible phantom.
+          3. Keep the inner back collar fabric if visible, but do not hallucinate or redraw fabric where it does not exist.
+
+        [PRESERVATION AND ORIGINAL CONSTRAINTS]:
+        - Preserve 100% of the original clothing design: Keep original textures, seams, zippers, logos, fabric folds, shadows, and natural creases.
+        - Do NOT smooth, simplify, or flatten the image. Do NOT alter colors or patterns.
+        - Do NOT drop, ignore, or separate the lower garments (pants/jeans/skirts). Keep both top and bottom fully connected.
+
+        [OUTPUT FORMAT]:
+        Return ONLY the final hollow clothing outfit shell on a perfectly solid transparent background. No text, no background plates, no borders.
+        `;
 
         const parts = [
             { text: prompt },
