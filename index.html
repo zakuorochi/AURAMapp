@@ -19,6 +19,8 @@
             font-family: 'Segoe UI', system-ui, sans-serif;
             height: 100vh;
             overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .screen {
@@ -110,7 +112,7 @@
             100% { top: 10%; opacity: 0.3; }
         }
 
-        #photo-preview, #user-preview, #final-fusion-preview {
+        #photo-preview, #user-preview {
             width: 90%; max-width: 340px;
             height: auto;
             max-height: 42vh;
@@ -118,6 +120,32 @@
             border: 1px solid rgba(0, 209, 255, 0.3);
             background: #000;
             object-fit: cover;
+        }
+
+        /* Contenedor de Zoom y Navegación de Bordes para el Resultado Final */
+        .zoom-container-wrapper {
+            width: 90vw;
+            max-width: 360px;
+            height: 48vh;
+            border-radius: 20px;
+            background: rgba(0, 209, 255, 0.05);
+            border: 1px solid rgba(0, 209, 255, 0.3);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none; /* Deshabilita gestos del navegador nativos para evitar rebote */
+        }
+
+        #final-fusion-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transform-origin: center center;
+            cursor: grab;
+            transition: transform 0.05s ease-out;
+            will-change: transform;
         }
 
         /* Pantalla de Carga */
@@ -250,17 +278,22 @@
         </div>
     </div>
 
-    <!-- 6. PANTALLA DE RESULTADO FINAL (FUSIÓN VIRTUAL) -->
+    <!-- 6. PANTALLA DE RESULTADO FINAL (FUSIÓN VIRTUAL CON PINCH TO ZOOM) -->
     <div id="screen-fusion-result" class="screen">
-        <img src="logo-auram.png" class="logo-auram" style="width: 50px; margin-bottom: 10px;" onerror="this.src='https://www.auram.site/logo-auram.png'">
-        <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 15px;">DISEÑO EN VESTIDOR</h3>
-        <div style="padding: 5px; border-radius: 15px; background: rgba(0,209,255,0.05); border: 1px solid rgba(0,209,255,0.3);">
-            <img id="final-fusion-preview" style="max-height: 48vh;">
+        <img src="logo-auram.png" class="logo-auram" style="width: 40px; margin-bottom: 5px;" onerror="this.src='https://www.auram.site/logo-auram.png'">
+        <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 10px;">DISEÑO EN VESTIDOR</h3>
+        
+        <!-- Contenedor de zoom seguro -->
+        <div class="zoom-container-wrapper" id="zoom-container">
+            <img id="final-fusion-preview" alt="Resultado de la fusión AURAM">
         </div>
-        <div class="tag-info" style="margin-top: 15px;">CÓDIGO DE PRENDA: A001</div>
+        
+        <div class="tag-info" style="margin-top: 10px;">CÓDIGO DE PRENDA: A001</div>
+        
+        <!-- Botones de salida rediseñados -->
         <div class="bottom-nav">
-            <button class="btn-auram" style="background:#333; width: 120px;" onclick="volverAlInicio()">NUEVA</button>
-            <button class="btn-auram" style="width: 120px;" onclick="guardarEnCatalogo()">CERRAR</button>
+            <button class="btn-auram" style="background:#222; width: 120px;" onclick="volverAlInicio()">REPETIR</button>
+            <button class="btn-auram" style="width: 120px;" onclick="compartirImagen()">COMPARTIR</button>
         </div>
     </div>
 
@@ -290,7 +323,7 @@
             }
         }
 
-        // COMPRESIÓN CLIENT-SIDE PARA DETENER ERROR 413 DE RAÍZ
+        // COMPRESIÓN CLIENT-SIDE PARA PREVENIR EL ERROR 413 DE VERCEL
         function comprimirBase64(base64Str, maxDimension = 850, isPng = false) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -390,7 +423,6 @@
                 reader.onload = async function(e) {
                     const rawBase64 = e.target.result.split(',')[1];
                     
-                    // Comprimir y redimensionar la imagen para evitar problemas de carga
                     fotoUsuarioBase64 = await comprimirBase64(rawBase64, 850, false);
                     
                     document.getElementById('user-placeholder').style.display = 'none';
@@ -421,10 +453,8 @@
             if (loadingSub) loadingSub.innerText = "Optimizando y aislando silueta con IA...";
 
             try {
-                // Comprimir la imagen de la prenda
                 const prendaComprimida = await comprimirBase64(fotoPrendaOriginal, 850, false);
 
-                // LLAMADA AL PASO 1 (Aislamiento quirúrgico)
                 const res1 = await fetch('/api/borrar-fondo', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -443,10 +473,8 @@
                     loadingScreen.classList.remove('active');
                 }
 
-                // Salto directo al probador místico
                 irA('screen-tryon-setup');
                 
-                // Ejecutar Paso 2 en segundo plano
                 ejecutarPaso2SegundoPlano(data1.imagenSinFondo);
 
             } catch (err) {
@@ -464,7 +492,6 @@
             const bgLoader = document.getElementById('bg-loader');
 
             try {
-                // LLAMADA AL PASO 2 (Generar Sticker Estético y Delineado)
                 const res2 = await fetch('/api/generar-catalogo', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -505,7 +532,7 @@
             }
         }
 
-        // --- SISTEMA DE FUSIÓN (Llamada al motor de Try-On) ---
+        // --- SISTEMA DE FUSIÓN ---
         async function iniciarFusionTryOn() {
             const loadingScreen = document.getElementById('screen-loading');
             const loadingText = document.getElementById('loading-text');
@@ -539,13 +566,17 @@
                 const data = await res.json();
 
                 if (data.success && data.imagenFinal) {
-                    document.getElementById('final-fusion-preview').src = "data:image/png;base64," + data.imagenFinal;
+                    const imgElement = document.getElementById('final-fusion-preview');
+                    imgElement.src = "data:image/png;base64," + data.imagenFinal;
                     
                     if (loadingScreen) {
                         loadingScreen.style.display = 'none';
                         loadingScreen.classList.remove('active');
                     }
                     irA('screen-fusion-result');
+                    
+                    // Inicializar el controlador táctil de zoom para la nueva imagen
+                    inicializarControladorZoom();
                 } else {
                     throw new Error(data.detalle || "La IA no devolvió píxeles de fusión.");
                 }
@@ -556,6 +587,147 @@
                     loadingScreen.classList.remove('active');
                 }
                 showAlert("FUSIÓN FALLIDA:\n" + err.message);
+            }
+        }
+
+        // --- MOTOR DE COMPARTIR NATIVO ---
+        async function compartirImagen() {
+            try {
+                const imgElement = document.getElementById('final-fusion-preview');
+                const base64Data = imgElement.src;
+                if (!base64Data || base64Data.includes('placeholder')) {
+                    showAlert("No hay imagen cargada para compartir.");
+                    return;
+                }
+                
+                // Convertir Base64 a blob binario
+                const response = await fetch(base64Data);
+                const blob = await response.blob();
+                const file = new File([blob], 'auram-tryon.png', { type: 'image/png' });
+                
+                // Intentar el método de compartir archivos nativo del celular
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Mi Vestidor AURAM',
+                        text: '¡Mira cómo me queda esta prenda en AURAM.site!'
+                    });
+                } else if (navigator.share) {
+                    // Compartir enlace de soporte si no puede compartir el binario directamente
+                    await navigator.share({
+                        title: 'Mi Vestidor AURAM',
+                        text: '¡Prueba la experiencia de vestidor virtual en AURAM.site!'
+                    });
+                } else {
+                    // Fallback definitivo: Descarga forzada del archivo
+                    const link = document.createElement('a');
+                    link.href = base64Data;
+                    link.download = 'auram-probador.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    showAlert("Imagen descargada con éxito. ¡Compártela!");
+                }
+            } catch (e) {
+                console.error("Error sharing:", e);
+                // Forzar descarga directa si el navegador del iframe bloquea el Share API
+                const link = document.createElement('a');
+                link.href = document.getElementById('final-fusion-preview').src;
+                link.download = 'auram-probador.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showAlert("Imagen guardada en el dispositivo.");
+            }
+        }
+
+        // --- SISTEMA DE CONTROL DE PINCH & ZOOM (ESTILO WHATSAPP) ---
+        let scale = 1;
+        let lastScale = 1;
+        let startX = 0, startY = 0;
+        let posX = 0, posY = 0;
+        let lastPosX = 0, lastPosY = 0;
+        let initialPinchDistance = 0;
+        let isDragging = false;
+
+        function inicializarControladorZoom() {
+            const container = document.getElementById('zoom-container');
+            const img = document.getElementById('final-fusion-preview');
+            
+            // Restablecer valores de zoom de ejecuciones anteriores
+            scale = 1;
+            lastScale = 1;
+            posX = 0;
+            posY = 0;
+            lastPosX = 0;
+            lastPosY = 0;
+            img.style.transform = `translate(0px, 0px) scale(1)`;
+
+            if (!container || !img) return;
+
+            // Función auxiliar para medir la distancia entre dos puntos táctiles
+            function getDistance(t1, t2) {
+                return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+            }
+
+            container.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    // Gesto de pinza iniciado
+                    initialPinchDistance = getDistance(e.touches[0], e.touches[1]);
+                    lastScale = scale;
+                } else if (e.touches.length === 1) {
+                    // Gesto de arrastre de un dedo iniciado
+                    isDragging = true;
+                    startX = e.touches[0].clientX - posX;
+                    startY = e.touches[0].clientY - posY;
+                }
+            }, { passive: true });
+
+            container.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2) {
+                    // Procesar ampliación de dos dedos
+                    const currentDistance = getDistance(e.touches[0], e.touches[1]);
+                    const factor = currentDistance / initialPinchDistance;
+                    scale = Math.min(Math.max(lastScale * factor, 1), 4); // Limitar zoom entre 1x y 4x
+                    
+                    aplicarLimitesDeNavegacion();
+                } else if (e.touches.length === 1 && isDragging && scale > 1) {
+                    // Procesar desplazamiento de bordes con la imagen ampliada
+                    posX = e.touches[0].clientX - startX;
+                    posY = e.touches[0].clientY - startY;
+                    
+                    aplicarLimitesDeNavegacion();
+                }
+            }, { passive: true });
+
+            container.addEventListener('touchend', (e) => {
+                isDragging = false;
+                if (e.touches.length < 2) {
+                    lastScale = scale;
+                }
+                lastPosX = posX;
+                lastPosY = posY;
+            });
+
+            // Función crítica que frena el movimiento en los bordes para que no se pierda la foto
+            function aplicarLimitesDeNavegacion() {
+                if (scale === 1) {
+                    posX = 0;
+                    posY = 0;
+                } else {
+                    const parentRect = container.getBoundingClientRect();
+                    
+                    // Cálculo dinámico del límite de arrastre según el nivel de zoom
+                    const limitX = (parentRect.width * (scale - 1)) / 2;
+                    const limitY = (parentRect.height * (scale - 1)) / 2;
+                    
+                    // Fijar límites estricto en el eje X e Y
+                    posX = Math.min(Math.max(posX, -limitX), limitX);
+                    posY = Math.min(Math.max(posY, -limitY), limitY);
+                }
+                
+                // Aplicar transformaciones mediante hardware para fluidez cinemática (60FPS)
+                img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
             }
         }
 
