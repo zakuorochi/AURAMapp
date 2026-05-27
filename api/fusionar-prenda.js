@@ -14,7 +14,7 @@ const db = admin.firestore();
 // Configuración de límites y control de abuso de tokens
 const LIMITE_FUSIONES = 10;
 const LISTA_BLANCA = [
-    "38.25.15.101", "127.0.0.1", "190.236.3.187", "190.236.6.225", "::1", "190.235.12.45"
+    "38.25.15.101", "127.0.0.1", "190.236.3.187", "190.236.6.225", "::1", "190.235.12.45", "38.25.16.18"
 ];
 
 export default async function handler(req, res) {
