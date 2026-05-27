@@ -66,8 +66,8 @@ export default async function handler(req, res) {
 3. CRITICAL: If any of the new garments are shorter than the original (e.g., short sleeves over long sleeves, or shorts over pants), you MUST remove the original visible clothing parts and reconstruct the person's skin (arms and legs) realistically.
 4. The full clothing outfit from the second image (all its pieces) must be the ONLY clothing visible on the corresponding parts of the person's body. Do not leave the person's original pants or shirt visible if a replacement exists in the second image.
 5. Maintain the person's pose, body shape, and background perfectly.
-6. ARTISTIC FINISH: Apply a realistic shallow depth-of-field effect. Keep the person and the new garments in sharp focus while applying a natural blur (bokeh) to the background.
-7. Return only the final image of the person wearing the new full outfit with the blurred background.`;
+6. ARTISTIC FINISH: Apply a very shallow depth-of-field effect. Keep the person and the new garments in incredibly sharp focus. Apply a heavy, creamy, and dramatic bokeh blur to the background, making it significantly softer and much less defined than the original, isolating the subject completely.
+7. Return only the final image of the person wearing the new full outfit with the intensely blurred background.`;
 
         const parts = [
             { text: instruction },
