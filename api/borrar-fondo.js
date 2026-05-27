@@ -28,30 +28,42 @@ export default async function handler(req, res) {
 
         // 3. PROMPT ULTRA-ESPECÍFICO PARA EXTRACCIÓN GHOST MANNEQUIN COMPLETA
     const prompt = `
-        [TASK TYPE]: Strict Image Segmentation & Alpha-Masking (Chroma-Key). No generative drawing.
-        
-        [OBJECTIVE]: Extract the ENTIRE clothing outfit (both top garments like jackets, shirts, hoodies AND bottom garments like pants, jeans, skirts, shorts) as a single connected hollow 3D shell. Completely erase the person wearing them and the background.
+       [TASK TYPE]: Strict Image Segmentation & Alpha-Masking (Chroma-Key). No generative drawing.
 
-        [STRICT HUMAN BODY ERADICATION RULES]:
-        - Identify and set all pixels containing human skin, flesh, or anatomy to 100% transparent alpha (rgba 0,0,0,0).
-        - Cleanly remove: Head, face, hair, ears, neck, throat, collarbones.
-        - Cleanly remove: Bare arms, elbows, forearms, wrists, hands, and fingers.
-        - Cleanly remove: Bare legs, ankles, feet, and toes.
-        - CRITICAL: If a hand, wrist, or neck overlaps or touches the garment, surgically crop and mask out the skin pixels. Do NOT allow skin-color or skin-texture bleed into the clothing boundary.
+[OBJECTIVE]: Extract the ENTIRE clothing outfit (both top garments like jackets, shirts, hoodies, polos, coats, 3D and 2D, AND bottom garments like pants, jeans, skirts, shorts, 3D or 2D) as a single connected hollow 3D shell. Completely erase the 3D or 2D person wearing them and the background; in the case of a 2D image, a conversion to 3D will be performed considering the visual characteristics of the garment.
 
-        [HOLLOW GHOST MANNEQUIN SHELL SPECIFICATIONS]:
-        - For openings where anatomy emerged (necklines, sleeve cuffs, pant cuffs):
-          1. Clean out the skin inside the hole.
-          2. Leave the opening hollow, open, and empty as a 3D shell of clothing worn by an invisible phantom.
-          3. Keep the inner back collar fabric if visible, but do not hallucinate or redraw fabric where it does not exist.
+[STRICT HUMAN BODY ERADICATION RULES]:
 
-        [PRESERVATION AND ORIGINAL CONSTRAINTS]:
-        - Preserve 100% of the original clothing design: Keep original textures, seams, zippers, logos, fabric folds, shadows, and natural creases.
-        - Do NOT smooth, simplify, or flatten the image. Do NOT alter colors or patterns.
-        - Do NOT drop, ignore, or separate the lower garments (pants/jeans/skirts). Keep both top and bottom fully connected.
+Identify and set all pixels containing human skin, flesh, or anatomy to 100% transparent alpha (rgba 0,0,0,0).
 
-        [OUTPUT FORMAT]:
-        Return ONLY the final hollow clothing outfit shell on a perfectly solid transparent background. No text, no background plates, no borders.
+Cleanly remove: Head, face, hair, ears, neck, throat, collarbones.
+
+Cleanly remove: Bare arms, elbows, forearms, wrists, hands, and fingers.
+
+Cleanly remove: Bare legs, ankles, feet, and toes.
+
+CRITICAL: If a hand, wrist, or neck overlaps or touches the garment, surgically crop and mask out the skin pixels. Do NOT allow skin-color or skin-texture bleed into the clothing boundary.
+
+[HOLLOW GHOST MANNEQUIN SHELL SPECIFICATIONS]:
+
+For openings where anatomy emerged (necklines, sleeve cuffs, pant cuffs):
+
+Clean out the skin inside the hole.
+
+Leave the opening hollow, open, and empty as a 3D shell of clothing worn by an invisible phantom.
+
+Keep the inner back collar fabric if visible, but do not hallucinate or redraw fabric where it does not exist.
+
+[PRESERVATION AND ORIGINALITY CONSTRAINTS]:
+
+Preserve 100% of the original clothing design: Keep original textures, seams, zippers, logos, fabric folds, shadows, and natural creases.
+
+FORBIDDEN: Do NOT smooth, simplify, or flatten the image. Do NOT alter colors or patterns.
+
+FORBIDDEN: Do NOT drop, ignore, or separate the lower garments (pants/jeans/skirts). Keep both top and bottom fully connected.
+
+[OUTPUT FORMAT]:
+Return ONLY the final hollow clothing outfit shell on a perfectly solid transparent background. No text, no background plates, no borders.
         `;
 
         const parts = [
