@@ -59,12 +59,12 @@ export default async function handler(req, res) {
         });
 
         // 3. PROMPT DE GENERACIÓN NATIVA
-        const instruction = `Task: Virtual Try-On with Artistic Depth. 
+        const instruction = `Task: Virtual Try-On with Artistic Depth.
 
 1. Identify the person in the first image and the garment in the second image.
-2. Replace the person's current body clothing with the garment from the second image.
-3. CRITICAL: If the new garment is shorter than the original (e.g., short sleeves over long sleeves), you MUST remove the original sleeves and reconstruct the person's skin (arms) realistically.
-4. The garment from the second image must be the ONLY clothing visible on that part of the body.
+2. Replace the person's current body clothing in the first image with the garment from the second image.
+3. CRITICAL: If the new garment is shorter than the original (e.g., short sleeves over long sleeves), you MUST remove the original sleeves and reconstruct the person's skin (arms and legs) realistically.
+4. The clothing outfit from the second image must be the ONLY clothing visible on the corresponding parts of the person's body.
 5. Maintain the person's pose, body shape, and background perfectly.
 6. ARTISTIC FINISH: Apply a realistic shallow depth-of-field effect. Keep the person and the new garment in sharp focus while applying a natural blur (bokeh) to the background.
 7. Return only the final image of the person wearing the new clothes with the blurred background.`;
