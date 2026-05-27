@@ -115,7 +115,7 @@
         #photo-preview, #user-preview {
             width: 90%; max-width: 340px;
             height: auto;
-            max-height: 42vh;
+            max-height: 38vh;
             border-radius: 15px;
             border: 1px solid rgba(0, 209, 255, 0.3);
             background: #000;
@@ -156,6 +156,18 @@
             will-change: transform;
         }
 
+        /* Contenedor de cuadricula para la previsualización del sticker */
+        .preview-checkerboard {
+            background: url('https://www.transparenttextures.com/patterns/checkerboard.png');
+            background-color: #151515;
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px dashed var(--cyan-auram);
+            display: inline-block;
+            max-width: 120px;
+            box-shadow: 0 0 15px rgba(0, 209, 255, 0.15);
+        }
+
         /* Pantalla de Carga */
         .loader {
             border: 3px solid rgba(0,209,255,0.1);
@@ -186,7 +198,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             color: #aaa;
         }
 
@@ -205,6 +217,7 @@
             letter-spacing: 1px;
             display: none;
             text-align: center;
+            max-width: 80%;
         }
     </style>
 </head>
@@ -263,26 +276,37 @@
     <!-- 5. PROBADOR VIRTUAL (SOLO SELECCIÓN DE ARCHIVOS) -->
     <div id="screen-tryon-setup" class="screen">
         <!-- Indicador de procesamiento en segundo plano -->
-        <div class="status-pill">
+        <div class="status-pill" style="margin-bottom: 10px;">
             <div id="bg-loader" class="loader" style="width: 12px; height: 12px; margin: 0; border-width: 2px;"></div>
             <span id="bg-status-text">🎨 Puliendo sticker en segundo plano...</span>
         </div>
 
-        <h3 style="color:var(--cyan-auram); font-size: 0.85rem; letter-spacing: 2px; margin-bottom: 10px; text-transform: uppercase;">Prueba la prenda</h3>
-        <p style="font-size: 0.75rem; color: #888; max-width: 290px; margin-bottom: 25px; line-height: 1.5;">Selecciona una foto para ver cómo te quedaría esta prenda</p>
+        <!-- FILTRO A: Previsualización del Sticker de Prenda Aislada -->
+        <div id="sticker-preview-container" style="display: none; margin-bottom: 15px; text-align: center; animation: fadeIn 0.5s ease-out;">
+            <div class="preview-checkerboard">
+                <img id="sticker-preview-img" style="max-height: 90px; width: auto; object-fit: contain;">
+            </div>
+            <p style="font-size: 0.55rem; color: #777; max-width: 260px; margin: 5px auto 0 auto; text-transform: uppercase; letter-spacing: 1px;">
+                Si el recorte es incorrecto, pulsa <strong>REPETIR</strong> para ajustar tu captura sin gastar intentos.
+            </p>
+        </div>
+
+        <h3 style="color:var(--cyan-auram); font-size: 0.85rem; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase;">Prueba la prenda</h3>
+        <p style="font-size: 0.72rem; color: #888; max-width: 290px; margin-bottom: 15px; line-height: 1.5;">Selecciona una foto para ver cómo te quedaría esta prenda</p>
         
         <!-- Área de visualización del usuario -->
-        <div style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px;">
+        <div style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 160px; margin-bottom: 10px;">
             <img id="user-preview" style="display: none;" onclick="document.getElementById('user-file').click()" title="Toca para cambiar la foto">
-            <div id="user-placeholder" style="width: 80%; height: 200px; border: 1px dashed rgba(0, 209, 255, 0.3); border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.02);">
-                <button class="btn-auram" style="padding: 14px 28px; font-size: 0.8rem;" onclick="document.getElementById('user-file').click()">MIS FOTOS</button>
+            <div id="user-placeholder" style="width: 80%; height: 150px; border: 1px dashed rgba(0, 209, 255, 0.3); border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.02);">
+                <button class="btn-auram" style="padding: 12px 24px; font-size: 0.75rem;" onclick="document.getElementById('user-file').click()">MIS FOTOS</button>
             </div>
             <input type="file" id="user-file" accept="image/*" style="display: none;" onchange="subirFotoUsuario(event)">
         </div>
 
-        <div class="bottom-nav" style="flex-direction: column; align-items: center; bottom: 30px; width: 85%;">
-            <!-- Botón Maestro de Fusión -->
-            <button id="btn-iniciar-fusion" class="btn-auram" style="width: 100%;" disabled onclick="iniciarFusionTryOn()">✨ FUSIONAR PRENDA</button>
+        <!-- Botones inferiores de Probador -->
+        <div class="bottom-nav" style="flex-direction: row; justify-content: center; align-items: center; bottom: 30px; width: 85%; gap: 12px;">
+            <button class="btn-auram" style="background:#222; width: 110px; padding: 12px 10px; font-size: 0.75rem;" onclick="volverAlInicio()">REPETIR</button>
+            <button id="btn-iniciar-fusion" class="btn-auram" style="width: 180px; padding: 12px 10px; font-size: 0.75rem;" disabled onclick="iniciarFusionTryOn()">✨ FUSIONAR</button>
         </div>
     </div>
 
@@ -325,13 +349,13 @@
         function showAlert(msg) {
             const box = document.getElementById('custom-alert-box');
             if(box) {
-                box.innerText = msg;
+                box.innerHTML = msg;
                 box.style.display = 'block';
-                setTimeout(() => { box.style.display = 'none'; }, 3500);
+                setTimeout(() => { box.style.display = 'none'; }, 5000); // 5s para que puedan leer avisos de límites
             }
         }
 
-        // COMPRESIÓN CLIENT-SIDE MEJORADA PARA RESOLUCIÓN Y DETALLES (MÁXIMA NITIDEZ - EVITA CONFUSIÓN DE COLOR DE PIEL)
+        // COMPRESIÓN CLIENT-SIDE MEJORADA PARA RESOLUCIÓN Y DETALLES (MÁXIMA NITIDEZ)
         function comprimirBase64(base64Str, maxDimension = 1600, isPng = false) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -340,7 +364,6 @@
                     let w = img.width;
                     let h = img.height;
                     
-                    // Escala proporcional inteligente de alta densidad
                     if (w > h) {
                         if (w > maxDimension) { h = Math.round(h * maxDimension / w); w = maxDimension; }
                     } else {
@@ -351,7 +374,6 @@
                     canvas.height = h;
                     const ctx = canvas.getContext('2d');
                     
-                    // MEJORA TÉCNICA CLAVE: Forzar algoritmos de interpolación bilinear de alta resolución
                     ctx.imageSmoothingEnabled = true;
                     ctx.imageSmoothingQuality = 'high';
                     
@@ -364,7 +386,6 @@
                     
                     ctx.drawImage(img, 0, 0, w, h);
                     
-                    // CALIBRACIÓN DE ENTRADA: Factor 0.90 de compresión JPEG para conservar los detalles finos de la tela
                     const format = isPng ? 'image/png' : 'image/jpeg';
                     const quality = isPng ? 1.0 : 0.90;
                     resolve(canvas.toDataURL(format, quality).split(',')[1]);
@@ -391,7 +412,7 @@
                     apagarCamaraPrenda();
                 }
 
-                // Restauración de imagen de usuario condicionada a la existencia del estado
+                // Restauración de imagen de usuario condicionada
                 if (screenId === 'screen-tryon-setup') {
                     const userPreview = document.getElementById('user-preview');
                     const userPlaceholder = document.getElementById('user-placeholder');
@@ -448,7 +469,6 @@
             const v = document.getElementById('webcam-garment');
             const c = document.createElement('canvas');
             
-            // Captura directa a máxima dimensión física del sensor de la cámara
             c.width = v.videoWidth; 
             c.height = v.videoHeight;
             const ctx = c.getContext('2d');
@@ -456,7 +476,6 @@
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(v, 0, 0);
             
-            // Compresión de captura inicial de calidad superior (0.95)
             fotoPrendaOriginal = c.toDataURL('image/jpeg', 0.95).split(',')[1];
             document.getElementById('photo-preview').src = "data:image/jpeg;base64," + fotoPrendaOriginal;
             irA('screen-confirm-garment');
@@ -473,7 +492,6 @@
                 reader.onload = async function(e) {
                     const rawBase64 = e.target.result.split(',')[1];
                     
-                    // Redimensión a 1600px de alta densidad para máxima precisión anatómica en Gemini
                     fotoUsuarioBase64 = await comprimirBase64(rawBase64, 1600, false);
                     
                     document.getElementById('user-placeholder').style.display = 'none';
@@ -504,7 +522,6 @@
             if (loadingSub) loadingSub.innerText = "Optimizando y aislando silueta con IA...";
 
             try {
-                // El Paso 1 recibe la imagen de la prenda procesada con el nuevo límite de 1600px
                 const prendaComprimida = await comprimirBase64(fotoPrendaOriginal, 1600, false);
 
                 const res1 = await fetch('/api/borrar-fondo', {
@@ -554,10 +571,17 @@
                 const data2 = await res2.json();
 
                 if (data2.success && data2.finalImage) {
-                    // El sticker resultante se guarda a 1600px con canal Alpha perfecto
                     stickerProcesadoBase64 = await comprimirBase64(data2.finalImage, 1600, true);
                     stickerListo = true;
                     
+                    // FILTRO A: Mostrar previsualización del sticker aislado para control del usuario
+                    const previewImg = document.getElementById('sticker-preview-img');
+                    const previewContainer = document.getElementById('sticker-preview-container');
+                    if (previewImg && previewContainer) {
+                        previewImg.src = "data:image/png;base64," + stickerProcesadoBase64;
+                        previewContainer.style.display = 'block';
+                    }
+
                     if (bgStatus) bgStatus.innerText = "🎨 Sticker estético A001 perfeccionado";
                     if (bgLoader) {
                         bgLoader.style.animation = 'none';
@@ -572,6 +596,14 @@
                 console.warn("Fallo refinamiento de segundo plano. Usando imagen Paso 1 como respaldo.");
                 stickerProcesadoBase64 = await comprimirBase64(imagenPaso1, 1600, true);
                 stickerListo = true;
+
+                const previewImg = document.getElementById('sticker-preview-img');
+                const previewContainer = document.getElementById('sticker-preview-container');
+                if (previewImg && previewContainer) {
+                    previewImg.src = "data:image/png;base64," + stickerProcesadoBase64;
+                    previewContainer.style.display = 'block';
+                }
+
                 if (bgStatus) bgStatus.innerText = "✅ Prenda lista para probar (Modo Respaldo)";
                 verificarRequisitosTryOn();
             }
@@ -620,25 +652,21 @@
                     canvas.height = mainImg.height;
                     const ctx = canvas.getContext('2d');
                     
-                    // Dibujar foto resultante
                     ctx.drawImage(mainImg, 0, 0);
                     
-                    // ESCALA DE MARCA DE AGUA: Cambiada dinámicamente al 20% de la anchura total para máxima visibilidad
+                    // ESCALA DE MARCA DE AGUA: Redimensionado al 20% solicitado por Adolfo para mayor visibilidad
                     const logoWidth = mainImg.width * 0.20;
                     const logoHeight = logoWidth * (logoImg.height / logoImg.width);
                     
-                    // Margen de separación proporcional (2% de la imagen)
                     const paddingX = mainImg.width * 0.02;
                     const paddingY = mainImg.height * 0.02;
                     
-                    // Coordenada: Esquina inferior derecha
                     const x = mainImg.width - logoWidth - paddingX;
                     const y = mainImg.height - logoHeight - paddingY;
                     
-                    // Aplicar transparencia del 50%
                     ctx.globalAlpha = 0.5;
                     ctx.drawImage(logoImg, x, y, logoWidth, logoHeight);
-                    ctx.globalAlpha = 1.0; // Restablecer opacidad global
+                    ctx.globalAlpha = 1.0;
                     
                     resolve(canvas.toDataURL('image/png'));
                 };
@@ -674,18 +702,22 @@
                     })
                 });
 
-                if (!res.ok) {
-                    const errData = await res.json();
-                    throw new Error(errData.detalle || "Error en el servidor de fusión.");
-                }
                 const data = await res.json();
+
+                // FILTRO B: Manejo dinámico de límites de uso en respuesta 429
+                if (res.status === 429) {
+                    throw new Error(data.detalle || "Límite de fusiones diarias alcanzado.");
+                }
+
+                if (!res.ok) {
+                    throw new Error(data.detalle || "Error en el servidor de fusión.");
+                }
 
                 if (data.success && data.imagenFinal) {
                     const rawResultBase64 = "data:image/png;base64," + data.imagenFinal;
                     
                     if (loadingSub) loadingSub.innerText = "Estampando firma AURAM...";
                     
-                    // Aplicar marca de agua con 50% de opacidad y 20% de escala
                     const imageWithWatermark = await aplicarMarcaDeAgua(rawResultBase64);
                     
                     const imgElement = document.getElementById('final-fusion-preview');
@@ -696,8 +728,6 @@
                         loadingScreen.classList.remove('active');
                     }
                     irA('screen-fusion-result');
-                    
-                    // Inicializar el controlador táctil de zoom para la nueva imagen
                     inicializarControladorZoom();
                 } else {
                     throw new Error(data.detalle || "La IA no devolvió píxeles de fusión.");
@@ -708,7 +738,7 @@
                     loadingScreen.style.display = 'none';
                     loadingScreen.classList.remove('active');
                 }
-                showAlert("FUSIÓN FALLIDA:\n" + err.message);
+                showAlert("🚨 ATENCIÓN:<br>" + err.message);
             }
         }
 
@@ -837,17 +867,19 @@
             }
         }
 
-        // volverAlInicio MODIFICADO: Ahora limpia 'fotoUsuarioBase64' y 'fotoUsuarioLista', forzando a que en cada ciclo se deba abrir obligatoriamente la galería ("MIS FOTOS")
+        // volverAlInicio: Limpia activamente 'fotoUsuarioBase64' y 'fotoUsuarioLista', garantizando el camuflaje psicológico en cada ciclo
         function volverAlInicio() {
             fotoPrendaOriginal = "";
             stickerProcesadoBase64 = null;
             stickerListo = false;
             
-            // BORRADO CRÍTICO DE ESTADOS DE USUARIO (Garantiza el camuflaje de procesamiento en segundo plano)
+            // BORRADO CRÍTICO DE ESTADOS DE USUARIO (Garantiza volver a pasar por "MIS FOTOS")
             fotoUsuarioBase64 = null;
             fotoUsuarioLista = false;
             
-            // Resetear UI
+            // Resetear UI de Previsualización (Filtro A)
+            document.getElementById('sticker-preview-container').style.display = 'none';
+            document.getElementById('sticker-preview-img').src = "";
             document.getElementById('user-preview').style.display = 'none';
             document.getElementById('user-placeholder').style.display = 'flex';
             document.getElementById('btn-iniciar-fusion').disabled = true;
@@ -857,7 +889,7 @@
             document.getElementById('bg-loader').style.animation = 'spin 1s linear infinite';
             document.getElementById('bg-loader').style.borderColor = 'rgba(0, 209, 255, 0.1) rgba(0, 209, 255, 0.1) var(--cyan-auram)';
 
-            irA('screen-instructions');
+            irA('screen-camera-garment');
         }
 
         function guardarEnCatalogo() {
