@@ -122,6 +122,14 @@
             object-fit: cover;
         }
 
+        #user-preview {
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+        #user-preview:hover {
+            border-color: var(--cyan-auram);
+        }
+
         /* Contenedor de Zoom y Navegación de Bordes para el Resultado Final */
         .zoom-container-wrapper {
             width: 90vw;
@@ -265,11 +273,12 @@
         
         <!-- Área de visualización del usuario -->
         <div style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px;">
-            <img id="user-preview" style="display: none;">
+            <!-- user-preview tap to change is integrated dynamically with document.getElementById('user-file').click() -->
+            <img id="user-preview" style="display: none;" onclick="document.getElementById('user-file').click()" title="Toca para cambiar la foto">
             <div id="user-placeholder" style="width: 80%; height: 200px; border: 1px dashed rgba(0, 209, 255, 0.3); border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.02);">
                 <button class="btn-auram" style="padding: 14px 28px; font-size: 0.8rem;" onclick="document.getElementById('user-file').click()">MIS FOTOS</button>
-                <input type="file" id="user-file" accept="image/*" style="display: none;" onchange="subirFotoUsuario(event)">
             </div>
+            <input type="file" id="user-file" accept="image/*" style="display: none;" onchange="subirFotoUsuario(event)">
         </div>
 
         <div class="bottom-nav" style="flex-direction: column; align-items: center; bottom: 30px; width: 85%;">
@@ -308,7 +317,7 @@
         // Variables globales para control de flujo
         let fotoPrendaOriginal = "";
         let stickerProcesadoBase64 = null;
-        let fotoUsuarioBase64 = null;
+        let fotoUsuarioBase64 = null; // Se conserva para usos múltiples
         let streamPrenda = null;
         
         let stickerListo = false;
@@ -381,6 +390,23 @@
                     encenderCamaraPrenda();
                 } else {
                     apagarCamaraPrenda();
+                }
+
+                // Mantener y restaurar la foto cargada previamente si volvemos al probador setup
+                if (screenId === 'screen-tryon-setup') {
+                    const userPreview = document.getElementById('user-preview');
+                    const userPlaceholder = document.getElementById('user-placeholder');
+                    if (fotoUsuarioBase64) {
+                        userPreview.src = "data:image/jpeg;base64," + fotoUsuarioBase64;
+                        userPreview.style.display = 'block';
+                        userPlaceholder.style.display = 'none';
+                        fotoUsuarioLista = true;
+                        verificarRequisitosTryOn();
+                    } else {
+                        userPreview.style.display = 'none';
+                        userPlaceholder.style.display = 'flex';
+                        fotoUsuarioLista = false;
+                    }
                 }
             }
         }
@@ -555,6 +581,67 @@
             }
         }
 
+        // --- SISTEMA AUXILIAR MARCA DE AGUA AURAM (50% OPACIDAD, 5% DE LA ANCHURA) ---
+        function cargarLogo() {
+            return new Promise((resolve) => {
+                const logoImg = new Image();
+                logoImg.crossOrigin = "anonymous";
+                logoImg.onload = () => resolve(logoImg);
+                logoImg.onerror = () => {
+                    const fallbackLogo = new Image();
+                    fallbackLogo.crossOrigin = "anonymous";
+                    fallbackLogo.onload = () => resolve(fallbackLogo);
+                    fallbackLogo.onerror = () => resolve(null);
+                    fallbackLogo.src = 'https://www.auram.site/logo-auram.png';
+                };
+                logoImg.src = 'logo-auram.png';
+            });
+        }
+
+        async function aplicarMarcaDeAgua(base64ImageSrc) {
+            return new Promise(async (resolve) => {
+                const logoImg = await cargarLogo();
+                if (!logoImg) {
+                    console.warn("AURAM LOG: No se pudo cargar el logo para marca de agua. Resolviendo original.");
+                    resolve(base64ImageSrc);
+                    return;
+                }
+                
+                const mainImg = new Image();
+                mainImg.crossOrigin = "anonymous";
+                mainImg.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = mainImg.width;
+                    canvas.height = mainImg.height;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Dibujar foto resultante
+                    ctx.drawImage(mainImg, 0, 0);
+                    
+                    // Calcular el tamaño del logo: exactamente 5% del ancho total de la imagen
+                    const logoWidth = mainImg.width * 0.05;
+                    const logoHeight = logoWidth * (logoImg.height / logoImg.width);
+                    
+                    // Margen de separación proporcional (2% de la imagen)
+                    const paddingX = mainImg.width * 0.02;
+                    const paddingY = mainImg.height * 0.02;
+                    
+                    // Coordenada: Esquina inferior derecha
+                    const x = mainImg.width - logoWidth - paddingX;
+                    const y = mainImg.height - logoHeight - paddingY;
+                    
+                    // Aplicar transparencia del 50%
+                    ctx.globalAlpha = 0.5;
+                    ctx.drawImage(logoImg, x, y, logoWidth, logoHeight);
+                    ctx.globalAlpha = 1.0; // Restablecer opacidad global
+                    
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                mainImg.onerror = () => resolve(base64ImageSrc);
+                mainImg.src = base64ImageSrc;
+            });
+        }
+
         // --- SISTEMA DE FUSIÓN ---
         async function iniciarFusionTryOn() {
             const loadingScreen = document.getElementById('screen-loading');
@@ -589,8 +676,15 @@
                 const data = await res.json();
 
                 if (data.success && data.imagenFinal) {
+                    const rawResultBase64 = "data:image/png;base64," + data.imagenFinal;
+                    
+                    if (loadingSub) loadingSub.innerText = "Estampando firma AURAM...";
+                    
+                    // Aplicar marca de agua con 50% de transparencia y 5% de dimensión antes de mostrar
+                    const imageWithWatermark = await aplicarMarcaDeAgua(rawResultBase64);
+                    
                     const imgElement = document.getElementById('final-fusion-preview');
-                    imgElement.src = "data:image/png;base64," + data.imagenFinal;
+                    imgElement.src = imageWithWatermark;
                     
                     if (loadingScreen) {
                         loadingScreen.style.display = 'none';
@@ -738,21 +832,18 @@
             }
         }
 
+        // NUEVO volverAlInicio: No resetea 'fotoUsuarioBase64' ni 'fotoUsuarioLista', permitiendo uso recurrente
         function volverAlInicio() {
             fotoPrendaOriginal = "";
             stickerProcesadoBase64 = null;
-            fotoUsuarioBase64 = null;
             stickerListo = false;
-            fotoUsuarioLista = false;
             
-            document.getElementById('user-preview').style.display = 'none';
-            document.getElementById('user-placeholder').style.display = 'flex';
-            document.getElementById('btn-iniciar-fusion').disabled = true;
+            // Reestablecer vistas del segundo plano y barra de estado
             document.getElementById('bg-status-text').innerText = "🎨 Puliendo sticker en segundo plano...";
             document.getElementById('bg-loader').style.animation = 'spin 1s linear infinite';
             document.getElementById('bg-loader').style.borderColor = 'rgba(0, 209, 255, 0.1) rgba(0, 209, 255, 0.1) var(--cyan-auram)';
 
-            irA('screen-instructions');
+            irA('screen-camera-garment');
         }
 
         function guardarEnCatalogo() {
