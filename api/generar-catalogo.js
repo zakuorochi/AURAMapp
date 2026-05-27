@@ -28,14 +28,14 @@ export default async function handler(req, res) {
 
         // PROMPT REDEFINIDO: Añadir delineado de sticker blanco y transparencia limpia
         const prompt = `Task: Professional Catalog Sticker Outline and Clean PNG Finishing.
-        
-        You are given an already isolated clothing outfit with a transparent background. 
-        Your ONLY job is to apply an aesthetic sticker treatment to it:
 
-        1. **Sticker Outline (Delineado de Sticker)**: Add a solid, crisp, clean, and uniform WHITE outline (stroke/border, approximately 5-8 pixels thick) around the entire outer silhouette of the clothing outfit. This outline must perfectly trace all edges.
-        2. **Perfect Transparency**: Keep the background outside the newly generated white outline 100% solid transparent (alpha channel PNG).
-        3. **No Garment Alterations**: Do NOT change, redraw, morph, or modify the texture, color, folds, design, or structure of the garments inside the outline.
-        4. **Output**: Return ONLY the final processed garment sticker with its clean white outline and transparent background.`;
+You are given an already isolated clothing outfit (which may consist of a single connected garment or multiple separate pieces like a top and a bottom) with a transparent background. 
+Your ONLY job is to apply an aesthetic sticker treatment to it:
+
+1. **Multi-Piece Sticker Outline**: Add a solid, crisp, clean, and uniform WHITE outline (stroke/border, approximately 5-8 pixels thick) around the outer silhouette of ALL garment pieces in the image. If there are multiple separate pieces (e.g., a top and a bottom separated by transparency), outline BOTH pieces. Do NOT erase, ignore, or discard any piece.
+2. **Perfect Transparency**: Keep the background outside the newly generated white outlines 100% solid transparent (alpha channel PNG).
+3. **No Garment Alterations**: Do NOT change, redraw, morph, or modify the texture, color, folds, design, or structure of the garments inside the outlines.
+4. **Output**: Return ONLY the final processed garment sticker with its clean white outline and transparent background.`;
 
         const parts = [
             { text: prompt },
