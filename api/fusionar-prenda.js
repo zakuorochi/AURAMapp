@@ -61,13 +61,13 @@ export default async function handler(req, res) {
         // 3. PROMPT DE GENERACIÓN NATIVA
         const instruction = `Task: Virtual Try-On with Artistic Depth.
 
-1. Identify the person in the first image and the garment in the second image.
-2. Replace the person's current body clothing in the first image with the garment from the second image.
-3. CRITICAL: If the new garment is shorter than the original (e.g., short sleeves over long sleeves), you MUST remove the original sleeves and reconstruct the person's skin (arms and legs) realistically.
-4. The clothing outfit from the second image must be the ONLY clothing visible on the corresponding parts of the person's body.
+1. Identify the person in the first image and the full clothing outfit (which contains both top and bottom pieces, such as shirts/jackets and pants/skirts) in the second image.
+2. Replace the person's current body clothing in the first image with the corresponding pieces of the clothing outfit from the second image (e.g., replace the person's top with the new top, and the person's bottom with the new bottom).
+3. CRITICAL: If any of the new garments are shorter than the original (e.g., short sleeves over long sleeves, or shorts over pants), you MUST remove the original visible clothing parts and reconstruct the person's skin (arms and legs) realistically.
+4. The full clothing outfit from the second image (all its pieces) must be the ONLY clothing visible on the corresponding parts of the person's body. Do not leave the person's original pants or shirt visible if a replacement exists in the second image.
 5. Maintain the person's pose, body shape, and background perfectly.
-6. ARTISTIC FINISH: Apply a realistic shallow depth-of-field effect. Keep the person and the new garment in sharp focus while applying a natural blur (bokeh) to the background.
-7. Return only the final image of the person wearing the new clothes with the blurred background.`;
+6. ARTISTIC FINISH: Apply a realistic shallow depth-of-field effect. Keep the person and the new garments in sharp focus while applying a natural blur (bokeh) to the background.
+7. Return only the final image of the person wearing the new full outfit with the blurred background.`;
 
         const parts = [
             { text: instruction },
