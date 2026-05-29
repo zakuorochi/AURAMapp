@@ -164,8 +164,21 @@
             border-radius: 12px;
             border: 1px dashed var(--cyan-auram);
             display: inline-block;
-            max-width: 120px;
+            width: 110px;
+            height: 110px;
+            overflow: hidden;
+            position: relative;
             box-shadow: 0 0 15px rgba(0, 209, 255, 0.15);
+            touch-action: none; /* Evita que la pantalla se desplace al explorar con el dedo */
+        }
+
+        #sticker-preview-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.15s ease-out;
+            transform-origin: center center;
+            will-change: transform;
         }
 
         /* Pantalla de Carga */
@@ -223,14 +236,17 @@
 </head>
 <body>
 
+    <!-- MODAL DE MENSAJES PERSONALIZADO -->
     <div id="custom-alert-box" class="custom-alert"></div>
 
+    <!-- 1. PANTALLA DE LOGIN -->
     <div id="screen-login" class="screen active" style="display: flex;">
         <img src="logo-auram.png" class="logo-auram" onerror="this.src='https://www.auram.site/logo-auram.png'">
         <h2 style="letter-spacing: 8px; font-weight: 200; margin-bottom: 30px;">AURAM APP</h2>
         <button class="btn-auram" onclick="irA('screen-instructions')">Entrar</button>
     </div>
 
+    <!-- 2. PANTALLA DE INSTRUCCIONES -->
     <div id="screen-instructions" class="screen">
         <div class="instruction-card">
             <h3 style="color:var(--cyan-auram); letter-spacing: 2px; margin-bottom: 15px;">CAPTURA PROFESIONAL</h3>
@@ -246,6 +262,7 @@
         </div>
     </div>
 
+    <!-- 3. CÁMARA DE PRENDA (DISEÑO GIGANTE DEL 80% DE PANTALLA) -->
     <div id="screen-camera-garment" class="screen">
         <div class="camera-viewport-container">
             <video id="webcam-garment" autoplay playsinline muted></video>
@@ -258,6 +275,7 @@
         </div>
     </div>
 
+    <!-- 4. CONFIRMACIÓN DE PRENDA -->
     <div id="screen-confirm-garment" class="screen">
         <img src="logo-auram.png" class="logo-auram" style="width: 40px; margin-bottom: 10px;" onerror="this.src='https://www.auram.site/logo-auram.png'">
         <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 15px;">¿LA FOTO ES CORRECTA?</h3>
@@ -268,24 +286,28 @@
         </div>
     </div>
 
+    <!-- 5. PROBADOR VIRTUAL (SOLO SELECCIÓN DE ARCHIVOS) -->
     <div id="screen-tryon-setup" class="screen">
+        <!-- Indicador de procesamiento en segundo plano -->
         <div class="status-pill" style="margin-bottom: 10px;">
             <div id="bg-loader" class="loader" style="width: 12px; height: 12px; margin: 0; border-width: 2px;"></div>
             <span id="bg-status-text">🎨 Puliendo sticker en segundo plano...</span>
         </div>
 
+        <!-- FILTRO A: Previsualización del Sticker de Prenda Aislada con Magnificador -->
         <div id="sticker-preview-container" style="display: none; margin-bottom: 15px; text-align: center; animation: fadeIn 0.5s ease-out;">
             <div class="preview-checkerboard">
-                <img id="sticker-preview-img" style="max-height: 90px; width: auto; object-fit: contain;">
+                <img id="sticker-preview-img" alt="Vista previa de la prenda">
             </div>
             <p style="font-size: 0.55rem; color: #777; max-width: 260px; margin: 5px auto 0 auto; text-transform: uppercase; letter-spacing: 1px;">
-                Si el recorte es incorrecto, pulsa <strong>REPETIR</strong> para ajustar tu captura sin gastar intentos.
+                Mantén presionado para <strong>explorar bordes</strong>. Si el recorte es incorrecto, pulsa REPETIR.
             </p>
         </div>
 
         <h3 style="color:var(--cyan-auram); font-size: 0.85rem; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase;">Prueba la prenda</h3>
         <p style="font-size: 0.72rem; color: #888; max-width: 290px; margin-bottom: 15px; line-height: 1.5;">Selecciona una foto para ver cómo te quedaría esta prenda</p>
         
+        <!-- Área de visualización del usuario -->
         <div style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 160px; margin-bottom: 10px;">
             <img id="user-preview" style="display: none;" onclick="document.getElementById('user-file').click()" title="Toca para cambiar la foto">
             <div id="user-placeholder" style="width: 80%; height: 150px; border: 1px dashed rgba(0, 209, 255, 0.3); border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.02);">
@@ -294,28 +316,33 @@
             <input type="file" id="user-file" accept="image/*" style="display: none;" onchange="subirFotoUsuario(event)">
         </div>
 
+        <!-- Botones inferiores de Probador -->
         <div class="bottom-nav" style="flex-direction: row; justify-content: center; align-items: center; bottom: 30px; width: 85%; gap: 12px;">
             <button class="btn-auram" style="background:#222; width: 110px; padding: 12px 10px; font-size: 0.75rem;" onclick="volverAlInicio()">REPETIR</button>
             <button id="btn-iniciar-fusion" class="btn-auram" style="width: 180px; padding: 12px 10px; font-size: 0.75rem;" disabled onclick="iniciarFusionTryOn()">✨ FUSIONAR</button>
         </div>
     </div>
 
+    <!-- 6. PANTALLA DE RESULTADO FINAL (FUSIÓN VIRTUAL CON PINCH TO ZOOM) -->
     <div id="screen-fusion-result" class="screen">
         <img src="logo-auram.png" class="logo-auram" style="width: 40px; margin-bottom: 5px;" onerror="this.src='https://www.auram.site/logo-auram.png'">
         <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 10px;">DISEÑO EN VESTIDOR</h3>
         
+        <!-- Contenedor de zoom seguro -->
         <div class="zoom-container-wrapper" id="zoom-container">
             <img id="final-fusion-preview" alt="Resultado de la fusión AURAM">
         </div>
         
         <div class="tag-info" style="margin-top: 10px;">CÓDIGO DE PRENDA: A001</div>
         
+        <!-- Botones de salida rediseñados -->
         <div class="bottom-nav">
             <button class="btn-auram" style="background:#222; width: 120px;" onclick="volverAlInicio()">REPETIR</button>
             <button class="btn-auram" style="width: 120px;" onclick="compartirImagen()">COMPARTIR</button>
         </div>
     </div>
 
+    <!-- PANTALLA DE CARGA -->
     <div id="screen-loading" class="screen" style="background: rgba(0,0,0,0.95); z-index: 10000;">
         <div class="loader"></div>
         <p id="loading-text" style="color: var(--cyan-auram); font-size: 0.75rem; letter-spacing: 3px; font-weight: bold; margin-top: 20px; text-transform: uppercase;">PROCESANDO PRENDA...</p>
@@ -641,17 +668,14 @@
                     ctx.drawImage(mainImg, 0, 0);
 
                     // --- NUEVO CAMBIO ADOLFO: EFECTO ESFERAS DE LUZ MÍSTICAS / OPTICAL BOKEH EN FONDO Y BORDES ---
-                    // Generamos un set fijo/semialeatorio controlado de círculos de luz traslúcidos cyan y dorados
                     const coloresEsferas = ['rgba(0, 209, 255, 0.22)', 'rgba(0, 255, 230, 0.15)', 'rgba(255, 255, 255, 0.25)', 'rgba(0, 114, 255, 0.18)'];
                     const numEsferas = 14;
                     
                     for (let i = 0; i < numEsferas; i++) {
-                        // Posicionar preferencialmente en el fondo de la imagen, laterales y esquinas para no tapar la prenda central
                         let radio = (mainImg.width * 0.02) + (Math.sin(i * 9.8) + 1) * (mainImg.width * 0.03); 
                         let x = (Math.cos(i * 3.5) + 1) * 0.5 * mainImg.width;
                         let y = (Math.sin(i * 2.1) + 1) * 0.5 * mainImg.height;
                         
-                        // Empujar esferas centrales hacia los bordes externos para cuidar el centro anatómico
                         if(x > mainImg.width * 0.35 && x < mainImg.width * 0.65) {
                             x += (x < mainImg.width * 0.5) ? -(mainImg.width * 0.2) : (mainImg.width * 0.2);
                         }
@@ -668,7 +692,7 @@
                         ctx.fill();
                     }
                     
-                    // ESCALA DE MARCA DE AGUA: Redimensionado al 20% solicitado por Adolfo para mayor visibilidad
+                    // ESCALA DE MARCA DE AGUA: Redimensionado al 20%
                     const logoWidth = mainImg.width * 0.20;
                     const logoHeight = logoWidth * (logoImg.height / logoImg.width);
                     
@@ -879,6 +903,65 @@
                 img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
             }
         }
+
+        // --- SISTEMA INTERACTIVO DE MAGNIFICADOR EN MINIATURA (TOUCH EXPLORE) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const checkerboard = document.querySelector('.preview-checkerboard');
+            const previewImg = document.getElementById('sticker-preview-img');
+
+            if (checkerboard && previewImg) {
+                const startZoom = (e) => {
+                    previewImg.style.transition = 'transform 0.1s ease-out';
+                    previewImg.style.transform = 'scale(2.2)'; // Agrandamiento ligero solicitado
+                    moveZoom(e);
+                };
+
+                const moveZoom = (e) => {
+                    const rect = checkerboard.getBoundingClientRect();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    
+                    // Cálculo de coordenadas relativas al recuadro (0% a 100%)
+                    const x = ((clientX - rect.left) / rect.width) * 100;
+                    const y = ((clientY - rect.top) / rect.height) * 100;
+                    
+                    // Asegurar límites dentro del contenedor
+                    const px = Math.min(Math.max(x, 0), 100);
+                    const py = Math.min(Math.max(y, 0), 100);
+                    
+                    // Desplazar el centro del zoom al punto del toque
+                    previewImg.style.transformOrigin = `${px}% ${py}%`;
+                };
+
+                const endZoom = () => {
+                    previewImg.style.transition = 'transform 0.25s ease-out, transform-origin 0.25s ease-out';
+                    previewImg.style.transform = 'scale(1)'; // Regreso elástico
+                    previewImg.style.transformOrigin = 'center center';
+                };
+
+                // Eventos de Toque en Dispositivo Móvil
+                checkerboard.addEventListener('touchstart', (e) => {
+                    e.preventDefault(); // Detener el scroll para facilitar exploración
+                    startZoom(e);
+                }, { passive: false });
+
+                checkerboard.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    moveZoom(e);
+                }, { passive: false });
+
+                checkerboard.addEventListener('touchend', endZoom);
+                checkerboard.addEventListener('touchcancel', endZoom);
+
+                // Soporte para pruebas en Escritorio/Mouse
+                checkerboard.addEventListener('mousedown', startZoom);
+                checkerboard.addEventListener('mousemove', (e) => {
+                    if (e.buttons === 1) moveZoom(e);
+                });
+                checkerboard.addEventListener('mouseup', endZoom);
+                checkerboard.addEventListener('mouseleave', endZoom);
+            }
+        });
 
         function volverAlInicio() {
             fotoPrendaOriginal = "";
