@@ -59,15 +59,16 @@ export default async function handler(req, res) {
         });
 
         // 3. PROMPT DE GENERACIÓN NATIVA
-        const instruction = `Task: Virtual Try-On with Artistic Depth.
+        const instruction = `Task: Virtual Try-On with Artistic Depth and Absolute Face Preservation.
 
-1. Identify the person in the first image and the full clothing outfit (which contains both top and bottom pieces, such as shirts/jackets and pants/skirts) in the second image.
-2. Replace the person's current body clothing in the first image with the corresponding pieces of the clothing outfit from the second image (e.g., replace the person's top with the new top, and the person's bottom with the new bottom).
-3. CRITICAL: If any of the new garments are shorter than the original (e.g., short sleeves over long sleeves, or shorts over pants), you MUST remove the original visible clothing parts and reconstruct the person's skin (arms and legs) realistically.
-4. The full clothing outfit from the second image (all its pieces) must be the ONLY clothing visible on the corresponding parts of the person's body. Do not leave the person's original pants or shirt visible if a replacement exists in the second image.
-5. Maintain the person's pose, body shape, and background perfectly.
-6. ARTISTIC FINISH: Apply a very shallow depth-of-field effect. Keep the person and the new garments in incredibly sharp focus. Apply a heavy, creamy, and dramatic bokeh blur to the background, making it significantly softer and much less defined than the original, isolating the subject completely.
-7. Return only the final image of the person wearing the new full outfit with the intensely blurred background.`;
+        1. Identify the person in the first image and the full clothing outfit (which contains both top and bottom pieces, such as shirts/jackets and pants/skirts) in the second image.
+        2. Replace the person's current body clothing in the first image with the corresponding pieces of the clothing outfit from the second image (e.g., replace the person's top with the new top, and the person's bottom with the new bottom).
+        3. CRITICAL: If any of the new garments are shorter than the original (e.g., short sleeves over long sleeves, or shorts over pants), you MUST remove the original visible clothing parts and reconstruct the person's skin (arms and legs) realistically.
+        4. The full clothing outfit from the second image (all its pieces) must be the ONLY clothing visible on the corresponding parts of the person's body. Do not leave the person's original pants or shirt visible if a replacement exists in the second image.
+        5. STRICT FACE AND IDENTITY PRESERVATION: Do NOT modify, touch-up, alter, or regenerate the person's face, head, hair, eyes, nose, mouth, facial features, expressions, or general identity. The face, head, and hair in the final image must be a completely identical, pixel-perfect replication of their appearance in the first image. Preserving the exact original facial identity of the user is of absolute, non-negotiable priority.
+        6. Maintain the person's pose and body shape perfectly.
+        7. ARTISTIC FINISH: Apply a very shallow depth-of-field effect. Keep the person and the new garments in incredibly sharp focus. Apply a heavy, creamy, and dramatic bokeh blur to the background, making it significantly softer and much less defined than the original, isolating the subject completely.
+        8. Return only the final image of the person wearing the new full outfit with their original face 100% untouched and the background intensely blurred.`;
 
         const parts = [
             { text: instruction },
