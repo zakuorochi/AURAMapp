@@ -11,8 +11,8 @@ export default async function handler(req, res) {
 
     try {
         const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-        // Extraemos garmentBase64 y coordenadas para dar soporte a la localización geométrica
-        const { image, codigo, genero, assetsFolder, garmentBase64, coordenadas } = body;
+        // Recibimos garmentBase64 (que ya es el sticker recortado de forma gratuita por el Canvas del celular)
+        const { image, codigo, genero, assetsFolder, garmentBase64 } = body;
 
         if (!image) {
             return res.status(400).json({ isError: true, detalle: "Faltan datos críticos: imagen del usuario para la fusión." });
@@ -23,10 +23,10 @@ export default async function handler(req, res) {
 
         // --- SISTEMA DE RESCATE INTELIGENTE ---
         if (garmentBase64) {
-            console.log("AURAM LOG: Procesando fusión directa usando Base64 de segundo plano optimizado.");
+            console.log("AURAM LOG: Procesando fusión directa usando Base64 optimizado por el cliente.");
             finalGarmentBase64 = garmentBase64.replace(/^data:image\/\w+;base64,/, "");
         } else {
-            // De lo contrario, realizamos la descarga clásica y segura del Storage Bucket
+            // De lo contrario, realizamos la descarga clásica de respaldo desde Google Storage
             if (!codigo) throw new Error("Falta el código de la prenda para acceder al almacén.");
             
             const matches = codigo.toString().toUpperCase().match(/[A-Z]\d{3}/);
@@ -52,37 +52,37 @@ export default async function handler(req, res) {
             finalGarmentBase64 = bufferPrenda.toString('base64');
         }
 
-        // 2. CONFIGURACIÓN DEL MODELO NANO BANANA (Gemini 2.5 Flash Image)
+        // 2. CONFIGURACIÓN DEL MODELO GEMINI DE ALTA FIDELIDAD (Fusión Multimodal)
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ 
             model: "gemini-2.5-flash-image" 
         });
 
-        // 3. INYECCIÓN DINÁMICA DE COORDENADAS EN EL PROMPT
-        let coordinatesInstruction = "";
-        if (coordenadas && Array.isArray(coordenadas) && coordenadas.length === 4) {
-            coordinatesInstruction = `\n\n9. COORDINATES GUIDANCE: The target clothing outfit in the second image is located precisely within the normalized bounding box coordinates [ymin, xmin, ymax, xmax] = [${coordenadas.join(", ")}]. Use these coordinates to isolate, extract, and scale the garment with absolute accuracy before placing it on the person.`;
-        }
+        // 3. PROMPT ESTRUCTURADO Y AUTORITARIO PARA EVITAR COLLAPSE O BLOQUEOS
+        const instruction = `Task: High-Fidelity Virtual Try-On and Style Merging.
 
-        // 4. PROMPT DE GENERACIÓN NATIVA
-        const instruction = `Task: Virtual Try-On with Artistic Depth and Absolute Face Preservation.
+        You are an expert virtual dressing AI. You are provided with exactly two input images:
+        - Input Image 1 (First image attached): A real photo of a person.
+        - Input Image 2 (Second image attached): An isolated clothing/garment sticker with a transparent background.
 
-        1. Identify the person in the first image and the full clothing outfit (which contains both top and bottom pieces, such as shirts/jackets and pants/skirts) in the second image.
-        2. Replace the person's current body clothing in the first image with the corresponding pieces of the clothing outfit from the second image (e.g., replace the person's top with the new top, and the person's bottom with the new bottom).
-        3. CRITICAL: If any of the new garments are shorter than the original (e.g., short sleeves over long sleeves, or shorts over pants), you MUST remove the original visible clothing parts and reconstruct the person's skin (arms and legs) realistically.
-        4. The full clothing outfit from the second image (all its pieces) must be the ONLY clothing visible on the corresponding parts of the person's body. Do not leave the person's original pants or shirt visible if a replacement exists in the second image.
-        5. STRICT FACE AND IDENTITY PRESERVATION: Do NOT modify, touch-up, alter, or regenerate the person's face, head, hair, eyes, nose, mouth, facial features, expressions, or general identity. The face, head, and hair in the final image must be a completely identical, pixel-perfect replication of their appearance in the first image. Preserving the exact original facial identity of the user is of absolute, non-negotiable priority.
-        6. Maintain the person's pose and body shape perfectly.
-        7. ARTISTIC FINISH: Apply a very shallow depth-of-field effect. Keep the person and the new garments in incredibly sharp focus. Apply a heavy, creamy, and dramatic bokeh blur to the background, making it significantly softer and much less defined than the original, isolating the subject completely.
-        8. Return only the final image of the person wearing the new full outfit with their original face 100% untouched and the background intensely blurred.${coordinatesInstruction}`;
+        Your absolute mission is to overlay, adapt, and fuse the garment from Input Image 2 onto the body of the person in Input Image 1.
+
+        STRICT RULES OF EXECUTION:
+        1. BODY MAPPING: Identify the torso, shoulders, arms, and legs of the person in Input Image 1.
+        2. drape AND SCALE: Take the garment from Input Image 2. Resize, deform, drape, and align it to perfectly match the exact pose, body orientation, and physical silhouette of the person in Input Image 1.
+        3. CLOTHING REPLACEMENT: The garment from Input Image 2 must completely cover and replace the original corresponding clothing in Input Image 1. Do not let original clothing layers underneath show through or peek out around the edges of the new garment.
+        4. ANATOMICAL INTEGRATION: If the new garment is shorter than the original (e.g., short sleeves replacing long sleeves, or a crop top replacing a long shirt), cleanly reconstruct the person's skin (arms, neck, or midriff) realistically, matching their exact original skin tone, texture, and ambient lighting.
+        5. IDENTITY LOCK (CRITICAL): Do NOT modify, touch-up, morph, or regenerate the person's face, head, hair, eyes, nose, mouth, expressions, or personal identity. The entire head, hair, and face area must remain an identical, pixel-perfect replication of their appearance in Input Image 1.
+        6. PROFESSIONAL FASHION DEPTH: Apply a premium bokeh effect to the original background of Input Image 1 (soft, creamy blur). Keep the person and the newly fitted garment in ultra-sharp focus, isolating them from the background with dramatic depth of field.
+        7. OUTPUT FORMAT: Return only the final merged image of the person wearing the new outfit, with no borders, texts, or empty side margins.`;
 
         const parts = [
             { text: instruction },
-            { inlineData: { data: cleanUserImage, mimeType: "image/jpeg" } },
-            { inlineData: { data: finalGarmentBase64, mimeType: "image/png" } }
+            { inlineData: { data: cleanUserImage, mimeType: "image/jpeg" } },      // Imagen 1: El usuario
+            { inlineData: { data: finalGarmentBase64, mimeType: "image/png" } }   // Imagen 2: La prenda recortada
         ];
 
-        // 5. EJECUCIÓN CON MODALIDAD DE IMAGEN
+        // 4. EJECUCIÓN DEL MOTOR DE IMAGEN CON TEMPERATURA BAJA (Fidelidad de Costura)
         const result = await model.generateContent({
             contents: [{ role: "user", parts }],
             generationConfig: {
