@@ -270,9 +270,11 @@
                 <div class="camera-reticle"></div>
             </div>
         </div>
-        <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 15px;">
-            <button class="btn-auram" onclick="capturarPrenda()">Capturar Prenda</button>
+        <div style="width: 100%; display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; width: 85%; max-width: 320px;">
+            <button class="btn-auram" style="flex: 1; padding: 14px 10px; font-size: 0.75rem;" onclick="capturarPrenda()">Capturar</button>
+            <button class="btn-auram" style="background:#222; border: 1px solid var(--cyan-auram); flex: 1; padding: 14px 10px; font-size: 0.75rem;" onclick="document.getElementById('garment-gallery-file').click()">Galería</button>
         </div>
+        <input type="file" id="garment-gallery-file" accept="image/*" style="display: none;" onchange="subirPrendaGaleria(event)">
     </div>
 
     <!-- 4. CONFIRMACIÓN DE PRENDA -->
@@ -494,6 +496,27 @@
             irA('screen-confirm-garment');
         }
 
+        async function subirPrendaGaleria(event) {
+            const file = event.target.files[0];
+            if (file) {
+                irA('screen-loading');
+                document.getElementById('loading-text').innerText = "PROCESANDO IMAGEN";
+                document.getElementById('loading-subtext').innerText = "Optimizando dimensiones de la prenda...";
+                
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const rawBase64 = e.target.result.split(',')[1];
+                    
+                    fotoPrendaOriginal = await comprimirBase64(rawBase64, 1600, false);
+                    
+                    document.getElementById('photo-preview').src = "data:image/jpeg;base64," + fotoPrendaOriginal;
+                    
+                    irA('screen-confirm-garment');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         async function subirFotoUsuario(event) {
             const file = event.target.files[0];
             if (file) {
@@ -520,6 +543,36 @@
             }
         }
 
+        // --- EXTRACCIÓN QUIRÚRGICA LOCAL EN CLIENTE (Canvas HTML5 Gratis) ---
+        function recortarPrendaCliente(base64Str, coordenadas) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const [ymin, xmin, ymax, xmax] = coordenadas;
+                    
+                    const w = img.width;
+                    const h = img.height;
+                    
+                    // Conversión de coordenadas normalizadas (0 a 1000) a píxeles físicos de la foto
+                    const xReal = Math.floor((xmin / 1000) * w);
+                    const yReal = Math.floor((ymin / 1000) * h);
+                    const wReal = Math.floor(((xmax - xmin) / 1000) * w);
+                    const hReal = Math.floor(((ymax - ymin) / 1000) * h);
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = wReal;
+                    canvas.height = hReal;
+                    const ctx = canvas.getContext('2d');
+                    
+                    ctx.drawImage(img, xReal, yReal, wReal, hReal, 0, 0, wReal, hReal);
+                    
+                    // Retornamos el PNG transparente recortado
+                    resolve(canvas.toDataURL('image/png').split(',')[1]);
+                };
+                img.src = "data:image/jpeg;base64," + base64Str;
+            });
+        }
+
         // --- INICIO DE PROCESO IA ---
         async function procesarFase1Extraccion() {
             const loadingScreen = document.getElementById('screen-loading');
@@ -532,23 +585,30 @@
             }
 
             if (loadingText) loadingText.innerText = "SINTONIZANDO PRENDA";
-            if (loadingSub) loadingSub.innerText = "Optimizando y aislando silueta con IA...";
+            if (loadingSub) loadingSub.innerText = "Localizando coordenadas de la prenda con IA...";
 
             try {
                 const prendaComprimida = await comprimirBase64(fotoPrendaOriginal, 1600, false);
 
+                // Llamar al endpoint ultra-económico que solo analiza y devuelve números de coordenadas
                 const res1 = await fetch('/api/borrar-fondo', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image: prendaComprimida })
                 });
 
-                if (!res1.ok) throw new Error("Fallo en la extracción inicial del fondo.");
+                if (!res1.ok) throw new Error("Fallo al detectar las coordenadas en el servidor.");
                 const data1 = await res1.json();
                 
-                if (!data1.success || !data1.imagenSinFondo) {
-                    throw new Error(data1.detalle || "La IA no logró aislar la prenda.");
+                if (!data1.success || !data1.coordenadas) {
+                    throw new Error(data1.detalle || "La IA no logró identificar la silueta de la prenda.");
                 }
+
+                if (loadingSub) loadingSub.innerText = "Efectuando recorte milimétrico local...";
+                
+                // Recorte quirúrgico del lado del cliente (Gratis, seguro y ultra rápido!)
+                stickerProcesadoBase64 = await recortarPrendaCliente(prendaComprimida, data1.coordenadas);
+                stickerListo = true;
 
                 if (loadingScreen) {
                     loadingScreen.style.display = 'none';
@@ -557,8 +617,23 @@
 
                 irA('screen-tryon-setup');
                 
-                // Ejecutar Paso 2 en segundo plano
-                ejecutarPaso2SegundoPlano(data1.imagenSinFondo);
+                // Actualizar interfaz del sticker de inmediato
+                const previewImg = document.getElementById('sticker-preview-img');
+                const previewContainer = document.getElementById('sticker-preview-container');
+                if (previewImg && previewContainer) {
+                    previewImg.src = "data:image/png;base64," + stickerProcesadoBase64;
+                    previewContainer.style.display = 'block';
+                }
+
+                const bgStatus = document.getElementById('bg-status-text');
+                const bgLoader = document.getElementById('bg-loader');
+                if (bgStatus) bgStatus.innerText = "✅ Prenda recortada y lista para probar";
+                if (bgLoader) {
+                    bgLoader.style.animation = 'none';
+                    bgLoader.style.borderColor = 'var(--cyan-auram)';
+                }
+                
+                verificarRequisitosTryOn();
 
             } catch (err) {
                 if (loadingScreen) {
@@ -567,58 +642,6 @@
                 }
                 showAlert("ERROR: " + err.message);
                 irA('screen-confirm-garment');
-            }
-        }
-
-        async function ejecutarPaso2SegundoPlano(imagenPaso1) {
-            const bgStatus = document.getElementById('bg-status-text');
-            const bgLoader = document.getElementById('bg-loader');
-
-            try {
-                const res2 = await fetch('/api/generar-catalogo', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: imagenPaso1 })
-                });
-
-                const data2 = await res2.json();
-
-                if (data2.success && data2.finalImage) {
-                    stickerProcesadoBase64 = await comprimirBase64(data2.finalImage, 1600, true);
-                    stickerListo = true;
-                    
-                    // FILTRO A: Mostrar previsualización del sticker aislado para control del usuario
-                    const previewImg = document.getElementById('sticker-preview-img');
-                    const previewContainer = document.getElementById('sticker-preview-container');
-                    if (previewImg && previewContainer) {
-                        previewImg.src = "data:image/png;base64," + stickerProcesadoBase64;
-                        previewContainer.style.display = 'block';
-                    }
-
-                    if (bgStatus) bgStatus.innerText = "🎨 Sticker estético A001 perfeccionado";
-                    if (bgLoader) {
-                        bgLoader.style.animation = 'none';
-                        bgLoader.style.borderColor = 'var(--cyan-auram)';
-                    }
-                    
-                    verificarRequisitosTryOn();
-                } else {
-                    throw new Error("No se pudo perfeccionar el sticker.");
-                }
-            } catch (e) {
-                console.warn("Fallo refinamiento de segundo plano. Usando imagen Paso 1 como respaldo.");
-                stickerProcesadoBase64 = await comprimirBase64(imagenPaso1, 1600, true);
-                stickerListo = true;
-
-                const previewImg = document.getElementById('sticker-preview-img');
-                const previewContainer = document.getElementById('sticker-preview-container');
-                if (previewImg && previewContainer) {
-                    previewImg.src = "data:image/png;base64," + stickerProcesadoBase64;
-                    previewContainer.style.display = 'block';
-                }
-
-                if (bgStatus) bgStatus.innerText = "✅ Prenda lista para probar (Modo Respaldo)";
-                verificarRequisitosTryOn();
             }
         }
 
@@ -912,7 +935,7 @@
             if (checkerboard && previewImg) {
                 const startZoom = (e) => {
                     previewImg.style.transition = 'transform 0.1s ease-out';
-                    previewImg.style.transform = 'scale(2.2)'; // Agrandamiento ligero solicitado
+                    previewImg.style.transform = 'scale(2.2)'; // Agrandamiento ligero
                     moveZoom(e);
                 };
 
