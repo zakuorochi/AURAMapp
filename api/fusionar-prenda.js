@@ -58,23 +58,24 @@ export default async function handler(req, res) {
             model: "gemini-2.5-flash-image" 
         });
 
-        // 3. PROMPT ESTRUCTURADO Y AUTORITARIO PARA EVITAR COLLAPSE O BLOQUEOS
+        // 3. PROMPT ESTRUCTURADO, BLINDADO Y ANTIALUCINACIONES (ANTIPANTASMAS)
         const instruction = `Task: High-Fidelity Virtual Try-On and Style Merging.
 
         You are an expert virtual dressing AI. You are provided with exactly two input images:
-        - Input Image 1 (First image attached): A real photo of a person.
+        - Input Image 1 (First image attached): A real photo of a single person.
         - Input Image 2 (Second image attached): An isolated clothing/garment sticker with a transparent background.
 
         Your absolute mission is to overlay, adapt, and fuse the garment from Input Image 2 onto the body of the person in Input Image 1.
 
-        STRICT RULES OF EXECUTION:
-        1. BODY MAPPING: Identify the torso, shoulders, arms, and legs of the person in Input Image 1.
-        2. drape AND SCALE: Take the garment from Input Image 2. Resize, deform, drape, and align it to perfectly match the exact pose, body orientation, and physical silhouette of the person in Input Image 1.
+        STRICT RULES OF EXECUTION (ANTI-GHOSTING & PHOTO INTEGRITY):
+        1. SINGLE SUBJECT ENFORCEMENT (CRITICAL): The final image MUST contain exactly ONE person—the user from Input Image 1. It is strictly FORBIDDEN to generate any ghost figures, secondary people, background silhouettes, extra legs, extra feet, or floating limbs next to or behind the main subject. The background must be completely clear of any secondary human presence, legs, or bodies.
+        2. BODY MAPPING & ALIGNMENT: Identify the torso, shoulders, arms, and legs of the person in Input Image 1. Fit and scale the garment from Input Image 2 perfectly onto this body shape, matching their exact pose, orientation, and physical silhouette.
         3. CLOTHING REPLACEMENT: The garment from Input Image 2 must completely cover and replace the original corresponding clothing in Input Image 1. Do not let original clothing layers underneath show through or peek out around the edges of the new garment.
-        4. ANATOMICAL INTEGRATION: If the new garment is shorter than the original (e.g., short sleeves replacing long sleeves, or a crop top replacing a long shirt), cleanly reconstruct the person's skin (arms, neck, or midriff) realistically, matching their exact original skin tone, texture, and ambient lighting.
-        5. IDENTITY LOCK (CRITICAL): Do NOT modify, touch-up, morph, or regenerate the person's face, head, hair, eyes, nose, mouth, expressions, or personal identity. The entire head, hair, and face area must remain an identical, pixel-perfect replication of their appearance in Input Image 1.
-        6. PROFESSIONAL FASHION DEPTH: Apply a premium bokeh effect to the original background of Input Image 1 (soft, creamy blur). Keep the person and the newly fitted garment in ultra-sharp focus, isolating them from the background with dramatic depth of field.
-        7. OUTPUT FORMAT: Return only the final merged image of the person wearing the new outfit, with no borders, texts, or empty side margins.`;
+        4. GARMENT ISOLATION: Treat Input Image 2 strictly as an empty, non-living clothing item. Completely ignore and eliminate any physical pose, skin color, limb structure, or feet/sandals of the original model who wore this garment in its source. Do NOT carry over secondary bodies or limbs into the final render.
+        5. ANATOMICAL INTEGRATION: If the new garment is shorter than the original (e.g., short sleeves replacing long sleeves, or a skirt/shorts replacing pants), cleanly reconstruct the person's skin (arms, neck, or legs) realistically, matching their exact original skin tone, texture, and ambient lighting.
+        6. IDENTITY LOCK: Do NOT modify, touch-up, morph, or regenerate the person's face, head, hair, eyes, nose, mouth, expressions, or personal identity. The entire head, hair, and face area must remain an identical, pixel-perfect replication of their appearance in Input Image 1.
+        7. PROFESSIONAL FASHION DEPTH: Apply a premium bokeh effect to the original background of Input Image 1 (soft, creamy blur). Keep the person and the newly fitted garment in ultra-sharp focus, isolating them from the background with dramatic depth of field. Ensure no background hallucinations are created in the blur.
+        8. OUTPUT FORMAT: Return only the final merged image of the person wearing the new outfit, with no borders, texts, or empty side margins.`;
 
         const parts = [
             { text: instruction },
