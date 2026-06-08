@@ -65,8 +65,8 @@ export default async function handler(req, res) {
             generationConfig: {
                 responseMimeType: "application/json",
                 temperature: 0.0
-            }
-            
+            },
+            serviceTier: "flex"  
         });
 
         const response = await result.response;
