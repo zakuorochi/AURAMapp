@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
         // 2. CONFIGURACIÓN GEMINI (Mantenemos Flash Lite y tus Safety Settings permisivos)
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
+        const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-flex" });
 
         const safetySettings = [
             { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
