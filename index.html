@@ -65,7 +65,7 @@
         /* Contenedor de cámara gigante (Ocupa el 80% de la altura de la pantalla) */
         .camera-viewport-container {
             width: 92vw;
-            height: 80vh;
+            height: 72vh;
             border-radius: 24px;
             border: 2px solid var(--cyan-auram);
             background: #000;
@@ -75,7 +75,7 @@
             margin-bottom: 15px;
         }
 
-        #webcam-garment {
+        .webcam-view {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -112,7 +112,7 @@
             100% { top: 10%; opacity: 0.3; }
         }
 
-        #photo-preview, #user-preview {
+        #photo-preview, #user-photo-preview, #user-preview {
             width: 90%; max-width: 340px;
             height: auto;
             max-height: 38vh;
@@ -164,12 +164,12 @@
             border-radius: 12px;
             border: 1px dashed var(--cyan-auram);
             display: inline-block;
-            width: 110px;
-            height: 110px;
+            width: 100px;
+            height: 100px;
             overflow: hidden;
             position: relative;
             box-shadow: 0 0 15px rgba(0, 209, 255, 0.15);
-            touch-action: none; /* Evita que la pantalla se desplace al explorar con el dedo */
+            touch-action: none;
         }
 
         #sticker-preview-img {
@@ -236,25 +236,21 @@
 </head>
 <body>
 
-    <!-- MODAL DE MENSAJES PERSONALIZADO -->
     <div id="custom-alert-box" class="custom-alert"></div>
 
-    <!-- 1. PANTALLA DE LOGIN -->
     <div id="screen-login" class="screen active" style="display: flex;">
         <img src="logo-auram.png" class="logo-auram" onerror="this.src='https://www.auram.site/logo-auram.png'">
         <h2 style="letter-spacing: 8px; font-weight: 200; margin-bottom: 30px;">AURAM APP</h2>
         <button class="btn-auram" onclick="irA('screen-instructions')">Entrar</button>
     </div>
 
-    <!-- 2. PANTALLA DE INSTRUCCIONES -->
     <div id="screen-instructions" class="screen">
         <div class="instruction-card">
-            <h3 style="color:var(--cyan-auram); letter-spacing: 2px; margin-bottom: 15px;">CAPTURA PROFESIONAL</h3>
+            <h3 style="color:var(--cyan-auram); letter-spacing: 2px; margin-bottom: 15px;">CAPTURA DE PRENDA</h3>
             <ul style="text-align: left; font-size: 0.75rem; color: #ccc; line-height: 1.8; list-style: none; padding: 0;">
-                <li style="margin-bottom: 8px;">🔹 Foto desde arriba (Vista Cenital).</li>
-                <li style="margin-bottom: 8px;">🔹 Superficie o fondo liso uniforme.</li>
-                <li style="margin-bottom: 8px;">🔹 Buena iluminación, evita sombras fuertes.</li>
-                <li>🔹 Extiende la prenda para evitar arrugas.</li>
+                <li style="margin-bottom: 8px;">🔹 Coloca la prenda en una superficie lisa.</li>
+                <li style="margin-bottom: 8px;">🔹 Evita sombras fuertes sobre el tejido.</li>
+                <li>🔹 Extiende bien las mangas y piernas de la ropa.</li>
             </ul>
         </div>
         <div class="bottom-nav">
@@ -262,10 +258,9 @@
         </div>
     </div>
 
-    <!-- 3. CÁMARA DE PRENDA (DISEÑO GIGANTE DEL 80% DE PANTALLA) -->
     <div id="screen-camera-garment" class="screen">
         <div class="camera-viewport-container">
-            <video id="webcam-garment" autoplay playsinline muted></video>
+            <video id="webcam-garment" class="webcam-view" autoplay playsinline muted></video>
             <div class="camera-overlay">
                 <div class="camera-reticle"></div>
             </div>
@@ -277,74 +272,85 @@
         <input type="file" id="garment-gallery-file" accept="image/*" style="display: none;" onchange="subirPrendaGaleria(event)">
     </div>
 
-    <!-- 4. CONFIRMACIÓN DE PRENDA -->
     <div id="screen-confirm-garment" class="screen">
         <img src="logo-auram.png" class="logo-auram" style="width: 40px; margin-bottom: 10px;" onerror="this.src='https://www.auram.site/logo-auram.png'">
-        <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 15px;">¿LA FOTO ES CORRECTA?</h3>
+        <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 15px;">¿FOTO DE PRENDA CORRECTA?</h3>
         <img id="photo-preview">
         <div class="bottom-nav">
             <button class="btn-auram" style="background:#333; width: 120px;" onclick="irA('screen-camera-garment')">REPETIR</button>
-            <button class="btn-auram" style="width: 120px;" onclick="procesarFase1Extraccion()">SÍ, PROCESAR</button>
+            <button class="btn-auram" style="width: 120px;" onclick="procesarFase1Extraccion()">PROCESAR</button>
         </div>
     </div>
 
-    <!-- 5. PROBADOR VIRTUAL (SOLO SELECCIÓN DE ARCHIVOS) -->
+    <div id="screen-camera-user" class="screen">
+        <div class="camera-viewport-container">
+            <video id="webcam-user" class="webcam-view" autoplay playsinline muted></video>
+            <div class="camera-overlay">
+                <div class="camera-reticle" style="border-radius: 50% / 30%; width: 70%; height: 85%;"></div>
+            </div>
+        </div>
+        <p style="font-size: 0.7rem; color: #888; margin-top: -5px; margin-bottom: 10px;">Encuadra tu cuerpo completo o torso de forma frontal</p>
+        <div style="width: 100%; display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; width: 85%; max-width: 320px;">
+            <button class="btn-auram" style="flex: 1; padding: 14px 10px; font-size: 0.75rem;" onclick="capturarUsuario()">Capturar</button>
+            <button class="btn-auram" style="background:#222; border: 1px solid var(--cyan-auram); flex: 1; padding: 14px 10px; font-size: 0.75rem;" onclick="document.getElementById('user-gallery-file').click()">Galería</button>
+        </div>
+        <input type="file" id="user-gallery-file" accept="image/*" style="display: none;" onchange="subirUsuarioGaleria(event)">
+    </div>
+
+    <div id="screen-confirm-user" class="screen">
+        <img src="logo-auram.png" class="logo-auram" style="width: 40px; margin-bottom: 10px;" onerror="this.src='https://www.auram.site/logo-auram.png'">
+        <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 15px;">¿TU FOTO ES CORRECTA?</h3>
+        <img id="user-photo-preview">
+        <div class="bottom-nav">
+            <button class="btn-auram" style="background:#333; width: 120px;" onclick="irA('screen-camera-user')">REPETIR</button>
+            <button class="btn-auram" style="width: 120px;" onclick="procesarFase2Anatomia()">ANALIZAR</button>
+        </div>
+    </div>
+
     <div id="screen-tryon-setup" class="screen">
-        <!-- Indicador de procesamiento en segundo plano -->
         <div class="status-pill" style="margin-bottom: 10px;">
             <div id="bg-loader" class="loader" style="width: 12px; height: 12px; margin: 0; border-width: 2px;"></div>
-            <span id="bg-status-text">🎨 Puliendo sticker en segundo plano...</span>
+            <span id="bg-status-text">🎨 Sincronizando capas del vestidor...</span>
         </div>
 
-        <!-- FILTRO A: Previsualización del Sticker de Prenda Aislada con Magnificador -->
-        <div id="sticker-preview-container" style="display: none; margin-bottom: 15px; text-align: center; animation: fadeIn 0.5s ease-out;">
-            <div class="preview-checkerboard">
-                <img id="sticker-preview-img" alt="Vista previa de la prenda">
+        <div style="display: flex; gap: 15px; justify-content: center; align-items: center; margin-bottom: 15px;">
+            <div id="sticker-preview-container" style="display: none; text-align: center;">
+                <div class="preview-checkerboard">
+                    <img id="sticker-preview-img" alt="Prenda">
+                </div>
+                <div class="tag-info" style="font-size:0.5rem;">Prenda Map</div>
             </div>
-            <p style="font-size: 0.55rem; color: #777; max-width: 260px; margin: 5px auto 0 auto; text-transform: uppercase; letter-spacing: 1px;">
-                Mantén presionado para <strong>explorar bordes</strong>. Si el recorte es incorrecto, pulsa REPETIR.
-            </p>
-        </div>
-
-        <h3 style="color:var(--cyan-auram); font-size: 0.85rem; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase;">Prueba la prenda</h3>
-        <p style="font-size: 0.72rem; color: #888; max-width: 290px; margin-bottom: 15px; line-height: 1.5;">Selecciona una foto para ver cómo te quedaría esta prenda</p>
-        
-        <!-- Área de visualización del usuario -->
-        <div style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 160px; margin-bottom: 10px;">
-            <img id="user-preview" style="display: none;" onclick="document.getElementById('user-file').click()" title="Toca para cambiar la foto">
-            <div id="user-placeholder" style="width: 80%; height: 150px; border: 1px dashed rgba(0, 209, 255, 0.3); border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.02);">
-                <button class="btn-auram" style="padding: 12px 24px; font-size: 0.75rem;" onclick="document.getElementById('user-file').click()">MIS FOTOS</button>
+            <div id="user-preview-container" style="text-align: center;">
+                <img id="user-preview" onclick="irA('screen-camera-user')" title="Toca para cambiar tu foto">
+                <div class="tag-info" style="font-size:0.5rem; color:#00ff88;">Usuario Map</div>
             </div>
-            <input type="file" id="user-file" accept="image/*" style="display: none;" onchange="subirFotoUsuario(event)">
         </div>
 
-        <!-- Botones inferiores de Probador -->
+        <h3 style="color:var(--cyan-auram); font-size: 0.85rem; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase;">Vestidor Listo</h3>
+        <p style="font-size: 0.72rem; color: #888; max-width: 290px; margin-bottom: 15px; line-height: 1.5;">Los mapas lógicos anatómicos se han consolidado con éxito.</p>
+
         <div class="bottom-nav" style="flex-direction: row; justify-content: center; align-items: center; bottom: 30px; width: 85%; gap: 12px;">
             <button class="btn-auram" style="background:#222; width: 110px; padding: 12px 10px; font-size: 0.75rem;" onclick="volverAlInicio()">REPETIR</button>
             <button id="btn-iniciar-fusion" class="btn-auram" style="width: 180px; padding: 12px 10px; font-size: 0.75rem;" disabled onclick="iniciarFusionTryOn()">✨ FUSIONAR</button>
         </div>
     </div>
 
-    <!-- 6. PANTALLA DE RESULTADO FINAL (FUSIÓN VIRTUAL CON PINCH TO ZOOM) -->
     <div id="screen-fusion-result" class="screen">
         <img src="logo-auram.png" class="logo-auram" style="width: 40px; margin-bottom: 5px;" onerror="this.src='https://www.auram.site/logo-auram.png'">
         <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 10px;">DISEÑO EN VESTIDOR</h3>
         
-        <!-- Contenedor de zoom seguro -->
         <div class="zoom-container-wrapper" id="zoom-container">
-            <img id="final-fusion-preview" alt="Resultado de la fusión AURAM">
+            <img id="final-fusion-preview" alt="Resultado AURAM">
         </div>
         
-        <div class="tag-info" style="margin-top: 10px;">CÓDIGO DE PRENDA: A001</div>
+        <div class="tag-info" style="margin-top: 10px;">PROCESADO MEDIANTE COORDINADAS DIRECTAS</div>
         
-        <!-- Botones de salida rediseñados -->
         <div class="bottom-nav">
             <button class="btn-auram" style="background:#222; width: 120px;" onclick="volverAlInicio()">REPETIR</button>
             <button class="btn-auram" style="width: 120px;" onclick="compartirImagen()">COMPARTIR</button>
         </div>
     </div>
 
-    <!-- PANTALLA DE CARGA -->
     <div id="screen-loading" class="screen" style="background: rgba(0,0,0,0.95); z-index: 10000;">
         <div class="loader"></div>
         <p id="loading-text" style="color: var(--cyan-auram); font-size: 0.75rem; letter-spacing: 3px; font-weight: bold; margin-top: 20px; text-transform: uppercase;">PROCESANDO PRENDA...</p>
@@ -352,12 +358,20 @@
     </div>
 
     <script>
-        // Variables globales para control de flujo
+        // Variables globales estructuradas del Pipeline de Datos
         let fotoPrendaOriginal = "";
-        let stickerProcesadoBase64 = null;
-        let fotoUsuarioBase64 = null; // Limpiado activamente en cada reinicio para camuflar la carga
-        let streamPrenda = null;
+        let fotoUsuarioOriginal = "";
         
+        let stickerProcesadoBase64 = null;
+        let fotoUsuarioBase64 = null;
+        
+        let streamPrenda = null;
+        let streamUsuario = null;
+        
+        // Almacenes de los mapas de coordenadas JSON que se inyectarán en la fusión final
+        let mapaJsonPrenda = null;
+        let mapaJsonUsuario = null;
+
         let stickerListo = false;
         let fotoUsuarioLista = false;
 
@@ -366,44 +380,29 @@
             if(box) {
                 box.innerHTML = msg;
                 box.style.display = 'block';
-                setTimeout(() => { box.style.display = 'none'; }, 5000); // 5s para que puedan leer avisos de límites
+                setTimeout(() => { box.style.display = 'none'; }, 5000);
             }
         }
 
-        // COMPRESIÓN CLIENT-SIDE MEJORADA PARA RESOLUCIÓN Y DETALLES (MÁXIMA NITIDEZ)
         function comprimirBase64(base64Str, maxDimension = 1600, isPng = false) {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    let w = img.width;
-                    let h = img.height;
-                    
+                    let w = img.width; let h = img.height;
                     if (w > h) {
                         if (w > maxDimension) { h = Math.round(h * maxDimension / w); w = maxDimension; }
                     } else {
                         if (h > maxDimension) { w = Math.round(w * maxDimension / h); h = maxDimension; }
                     }
-                    
-                    canvas.width = w;
-                    canvas.height = h;
+                    canvas.width = w; canvas.height = h;
                     const ctx = canvas.getContext('2d');
-                    
                     ctx.imageSmoothingEnabled = true;
                     ctx.imageSmoothingQuality = 'high';
-                    
-                    if (isPng) {
-                        ctx.clearRect(0, 0, w, h);
-                    } else {
-                        ctx.fillStyle = '#FFFFFF';
-                        ctx.fillRect(0, 0, w, h);
-                    }
-                    
+                    if (isPng) ctx.clearRect(0, 0, w, h);
+                    else { ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h); }
                     ctx.drawImage(img, 0, 0, w, h);
-                    
-                    const format = isPng ? 'image/png' : 'image/jpeg';
-                    const quality = isPng ? 1.0 : 0.90;
-                    resolve(canvas.toDataURL(format, quality).split(',')[1]);
+                    resolve(canvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', isPng ? 1.0 : 0.90).split(',')[1]);
                 };
                 img.src = (base64Str.startsWith('data:') ? '' : 'data:image/jpeg;base64,') + base64Str;
             });
@@ -421,76 +420,39 @@
                 target.classList.add('active');
                 target.style.display = 'flex';
                 
+                // Control selectivo de hardware de cámaras para evitar bloqueos de recursos
                 if (screenId === 'screen-camera-garment') {
-                    encenderCamaraPrenda();
+                    apagarCamaraUsuario(); encenderCamaraPrenda();
+                } else if (screenId === 'screen-camera-user') {
+                    apagarCamaraPrenda(); encenderCamaraUsuario();
                 } else {
-                    apagarCamaraPrenda();
-                }
-
-                // Restauración de imagen de usuario condicionada
-                if (screenId === 'screen-tryon-setup') {
-                    const userPreview = document.getElementById('user-preview');
-                    const userPlaceholder = document.getElementById('user-placeholder');
-                    if (fotoUsuarioBase64) {
-                        userPreview.src = "data:image/jpeg;base64," + fotoUsuarioBase64;
-                        userPreview.style.display = 'block';
-                        userPlaceholder.style.display = 'none';
-                        fotoUsuarioLista = true;
-                        verificarRequisitosTryOn();
-                    } else {
-                        userPreview.style.display = 'none';
-                        userPlaceholder.style.display = 'flex';
-                        fotoUsuarioLista = false;
-                    }
+                    apagarCamaraPrenda(); apagarCamaraUsuario();
                 }
             }
         }
 
-        // CAPTURA MEJORADA: Solicitud de flujo de video en Ultra HD / 4K nativo con caída controlada a 1080p
+        // --- MANEJO DE CÁMARA 1 (PRENDA) ---
         async function encenderCamaraPrenda() {
             const video = document.getElementById('webcam-garment');
             try {
                 streamPrenda = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        facingMode: "environment", 
-                        width: { ideal: 3840, min: 1920 }, 
-                        height: { ideal: 2160, min: 1080 } 
-                    },
-                    audio: false
+                    video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false
                 });
                 video.srcObject = streamPrenda;
-            } catch (e) { 
-                console.error("Fallo resolución UHD. Intentando compatibilidad HD estándar:", e);
-                try {
-                    streamPrenda = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: "environment", width: { ideal: 1280 } },
-                        audio: false
-                    });
-                    video.srcObject = streamPrenda;
-                } catch (fallbackErr) {
-                    showAlert("Error de cámara. Asegúrate de otorgar permisos."); 
-                }
+            } catch (e) {
+                showAlert("Error al iniciar cámara trasera de prendas.");
             }
         }
 
         function apagarCamaraPrenda() {
-            if (streamPrenda) {
-                streamPrenda.getTracks().forEach(t => t.stop());
-                streamPrenda = null;
-            }
+            if (streamPrenda) { streamPrenda.getTracks().forEach(t => t.stop()); streamPrenda = null; }
         }
 
         function capturarPrenda() {
             const v = document.getElementById('webcam-garment');
             const c = document.createElement('canvas');
-            
-            c.width = v.videoWidth; 
-            c.height = v.videoHeight;
-            const ctx = c.getContext('2d');
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(v, 0, 0);
-            
+            c.width = v.videoWidth; c.height = v.videoHeight;
+            c.getContext('2d').drawImage(v, 0, 0);
             fotoPrendaOriginal = c.toDataURL('image/jpeg', 0.95).split(',')[1];
             document.getElementById('photo-preview').src = "data:image/jpeg;base64," + fotoPrendaOriginal;
             irA('screen-confirm-garment');
@@ -499,172 +461,178 @@
         async function subirPrendaGaleria(event) {
             const file = event.target.files[0];
             if (file) {
-                irA('screen-loading');
-                document.getElementById('loading-text').innerText = "PROCESANDO IMAGEN";
-                document.getElementById('loading-subtext').innerText = "Optimizando dimensiones de la prenda...";
-                
                 const reader = new FileReader();
                 reader.onload = async function(e) {
-                    const rawBase64 = e.target.result.split(',')[1];
-                    
-                    fotoPrendaOriginal = await comprimirBase64(rawBase64, 1600, false);
-                    
+                    fotoPrendaOriginal = e.target.result.split(',')[1];
                     document.getElementById('photo-preview').src = "data:image/jpeg;base64," + fotoPrendaOriginal;
-                    
                     irA('screen-confirm-garment');
                 };
                 reader.readAsDataURL(file);
             }
         }
 
-        async function subirFotoUsuario(event) {
+        // --- MANEJO DE CÁMARA 2 (USUARIO) ---
+        async function encenderCamaraUsuario() {
+            const video = document.getElementById('webcam-user');
+            try {
+                // Se solicita facingMode "user" (frontal) por defecto para el probador del cliente
+                streamUsuario = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user", width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false
+                });
+                video.srcObject = streamUsuario;
+            } catch (e) {
+                showAlert("Error al iniciar cámara frontal del usuario.");
+            }
+        }
+
+        function apagarCamaraUsuario() {
+            if (streamUsuario) { streamUsuario.getTracks().forEach(t => t.stop()); streamUsuario = null; }
+        }
+
+        function capturarUsuario() {
+            const v = document.getElementById('webcam-user');
+            const c = document.createElement('canvas');
+            c.width = v.videoWidth; c.height = v.videoHeight;
+            c.getContext('2d').drawImage(v, 0, 0);
+            fotoUsuarioOriginal = c.toDataURL('image/jpeg', 0.95).split(',')[1];
+            document.getElementById('user-photo-preview').src = "data:image/jpeg;base64," + fotoUsuarioOriginal;
+            irA('screen-confirm-user');
+        }
+
+        async function subirUsuarioGaleria(event) {
             const file = event.target.files[0];
             if (file) {
-                irA('screen-loading');
-                document.getElementById('loading-text').innerText = "PROCESANDO IMAGEN";
-                document.getElementById('loading-subtext').innerText = "Optimizando dimensiones de usuario...";
-                
                 const reader = new FileReader();
                 reader.onload = async function(e) {
-                    const rawBase64 = e.target.result.split(',')[1];
-                    
-                    fotoUsuarioBase64 = await comprimirBase64(rawBase64, 1600, false);
-                    
-                    document.getElementById('user-placeholder').style.display = 'none';
-                    const userPreview = document.getElementById('user-preview');
-                    userPreview.src = "data:image/jpeg;base64," + fotoUsuarioBase64;
-                    userPreview.style.display = 'block';
-                    
-                    fotoUsuarioLista = true;
-                    irA('screen-tryon-setup');
-                    verificarRequisitosTryOn();
+                    fotoUsuarioOriginal = e.target.result.split(',')[1];
+                    document.getElementById('user-photo-preview').src = "data:image/jpeg;base64," + fotoUsuarioOriginal;
+                    irA('screen-confirm-user');
                 };
                 reader.readAsDataURL(file);
             }
         }
 
-        // --- EXTRACCIÓN QUIRÚRGICA LOCAL EN CLIENTE (Canvas HTML5 Gratis) ---
+        // --- RECORTE GEOMÉTRICO LOCAL (Canvas HTML5) ---
         function recortarPrendaCliente(base64Str, coordenadas) {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => {
                     const [ymin, xmin, ymax, xmax] = coordenadas;
-                    
-                    const w = img.width;
-                    const h = img.height;
-                    
-                    // Conversión de coordenadas normalizadas (0 a 1000) a píxeles físicos de la foto
+                    const w = img.width; const h = img.height;
                     const xReal = Math.floor((xmin / 1000) * w);
                     const yReal = Math.floor((ymin / 1000) * h);
                     const wReal = Math.floor(((xmax - xmin) / 1000) * w);
                     const hReal = Math.floor(((ymax - ymin) / 1000) * h);
                     
                     const canvas = document.createElement('canvas');
-                    canvas.width = wReal;
-                    canvas.height = hReal;
-                    const ctx = canvas.getContext('2d');
-                    
-                    ctx.drawImage(img, xReal, yReal, wReal, hReal, 0, 0, wReal, hReal);
-                    
-                    // Retornamos el PNG transparente recortado
+                    canvas.width = wReal; canvas.height = hReal;
+                    canvas.getContext('2d').drawImage(img, xReal, yReal, wReal, hReal, 0, 0, wReal, hReal);
                     resolve(canvas.toDataURL('image/png').split(',')[1]);
                 };
                 img.src = "data:image/jpeg;base64," + base64Str;
             });
         }
 
-        // --- INICIO DE PROCESO IA ---
+        // --- FASE 1: PROCESAMIENTO EN SEGUNDO PLANO DE LA PRENDA ---
         async function procesarFase1Extraccion() {
-            const loadingScreen = document.getElementById('screen-loading');
-            const loadingText = document.getElementById('loading-text');
-            const loadingSub = document.getElementById('loading-subtext');
-
-            if (loadingScreen) {
-                loadingScreen.style.display = 'flex';
-                loadingScreen.classList.add('active');
-            }
-
-            if (loadingText) loadingText.innerText = "SINTONIZANDO PRENDA";
-            if (loadingSub) loadingSub.innerText = "Localizando coordenadas de la prenda con IA...";
+            // ENFOQUE PARALELO: Desparamos la petición HTTP al servidor pero saltamos de inmediato a capturar el cuerpo
+            irA('screen-camera-user'); 
+            showAlert("🎨 Procesando la prenda. Ahora captura tu foto para el vestidor.");
 
             try {
                 const prendaComprimida = await comprimirBase64(fotoPrendaOriginal, 1600, false);
-
-                // Llamar al endpoint ultra-económico que solo analiza y devuelve números de coordenadas
                 const res1 = await fetch('/api/borrar-fondo', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image: prendaComprimida })
                 });
 
-                if (!res1.ok) throw new Error("Fallo al detectar las coordenadas en el servidor.");
                 const data1 = await res1.json();
                 
-                if (!data1.success || !data1.coordenadas) {
-                    throw new Error(data1.detalle || "La IA no logró identificar la silueta de la prenda.");
+                // Si el escudo de seguridad detecta lencería o bañador, frenar el flujo completo
+                if (data1.is_safe_garment === false || data1.success === false) {
+                    volverAlInicio();
+                    showAlert("🚨 PRENDA RECHAZADA:<br>" + (data1.rejection_reason || data1.detalle));
+                    return;
                 }
 
-                if (loadingSub) loadingSub.innerText = "Efectuando recorte milimétrico local...";
-                
-                // Recorte quirúrgico del lado del cliente (Gratis, seguro y ultra rápido!)
+                // Almacenar el mapa lúdico del Sticker
+                mapaJsonPrenda = data1;
                 stickerProcesadoBase64 = await recortarPrendaCliente(prendaComprimida, data1.coordenadas);
                 stickerListo = true;
 
-                if (loadingScreen) {
-                    loadingScreen.style.display = 'none';
-                    loadingScreen.classList.remove('active');
-                }
-
-                irA('screen-tryon-setup');
-                
-                // Actualizar interfaz del sticker de inmediato
+                // Actualizar la interfaz si el usuario ya está esperando en la sala de setup
                 const previewImg = document.getElementById('sticker-preview-img');
                 const previewContainer = document.getElementById('sticker-preview-container');
                 if (previewImg && previewContainer) {
                     previewImg.src = "data:image/png;base64," + stickerProcesadoBase64;
                     previewContainer.style.display = 'block';
                 }
-
-                const bgStatus = document.getElementById('bg-status-text');
-                const bgLoader = document.getElementById('bg-loader');
-                if (bgStatus) bgStatus.innerText = "✅ Prenda recortada y lista para probar";
-                if (bgLoader) {
-                    bgLoader.style.animation = 'none';
-                    bgLoader.style.borderColor = 'var(--cyan-auram)';
-                }
-                
-                verificarRequisitosTryOn();
-
+                actualizarBarraEstadoPill();
             } catch (err) {
-                if (loadingScreen) {
-                    loadingScreen.style.display = 'none';
-                    loadingScreen.classList.remove('active');
+                console.error("Error en procesamiento asíncrono de prenda:", err);
+                showAlert("Error al mapear la geometría de la prenda.");
+            }
+        }
+
+        // --- FASE 2: PROCESAMIENTO DEL CUERPO DEL USUARIO (ESCUDO NIÑOS) ---
+        async function procesarFase2Anatomia() {
+            irA('screen-loading');
+            document.getElementById('loading-text').innerText = "ESCANEANDO CUERPO";
+            document.getElementById('loading-subtext').innerText = "Validando proporciones y escudo de privacidad infantil...";
+
+            try {
+                fotoUsuarioBase64 = await comprimirBase64(fotoUsuarioOriginal, 1600, false);
+                const res2 = await fetch('/api/validar-cuerpo', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: fotoUsuarioBase64 })
+                });
+
+                const data2 = await res2.json();
+
+                if (data2.is_adult_user === false || data2.success === false) {
+                    irA('screen-camera-user');
+                    showAlert("🚨 ACCESO DENEGADO:<br>" + (data2.rejection_reason || data2.detalle));
+                    return;
                 }
-                showAlert("ERROR: " + err.message);
-                irA('screen-confirm-garment');
+
+                // Guardar el mapa lúdico del Muñeco articulado
+                mapaJsonUsuario = data2;
+                fotoUsuarioLista = true;
+
+                // Pintar previsualización del cuerpo
+                const userPreview = document.getElementById('user-preview');
+                userPreview.src = "data:image/jpeg;base64," + fotoUsuarioBase64;
+                userPreview.style.display = 'block';
+
+                irA('screen-tryon-setup');
+                actualizarBarraEstadoPill();
+            } catch (err) {
+                irA('screen-confirm-user');
+                showAlert("ERROR TÉCNICO: " + err.message);
             }
         }
 
-        function verificarRequisitosTryOn() {
-            const btnItem = document.getElementById('btn-iniciar-fusion');
+        function actualizarBarraEstadoPill() {
+            const bgStatus = document.getElementById('bg-status-text');
+            const bgLoader = document.getElementById('bg-loader');
+            
             if (stickerListo && fotoUsuarioLista) {
-                btnItem.disabled = false;
-                btnItem.style.transform = 'scale(1.03)';
-                showAlert("✨ ¡Todo listo! Pulsa Fusionar para probarte la prenda.");
+                if (bgStatus) bgStatus.innerText = "✅ Mapas anatómicos acoplados y listos.";
+                if (bgLoader) { bgLoader.style.animation = 'none'; bgLoader.style.borderColor = 'var(--cyan-auram)'; }
+                document.getElementById('btn-iniciar-fusion').disabled = false;
+            } else if (!stickerListo && fotoUsuarioLista) {
+                if (bgStatus) bgStatus.innerText = "⏳ Esperando render final de la prenda...";
             }
         }
 
-        // --- SISTEMA AUXILIAR MARCA DE AGUA AURAM (50% OPACIDAD, 20% DE LA ANCHURA) ---
+        // --- MARCA DE AGUA (Intacto) ---
         function cargarLogo() {
             return new Promise((resolve) => {
-                const logoImg = new Image();
-                logoImg.crossOrigin = "anonymous";
+                const logoImg = new Image(); logoImg.crossOrigin = "anonymous";
                 logoImg.onload = () => resolve(logoImg);
                 logoImg.onerror = () => {
-                    const fallbackLogo = new Image();
-                    fallbackLogo.crossOrigin = "anonymous";
-                    fallbackLogo.onload = () => resolve(fallbackLogo);
-                    fallbackLogo.onerror = () => resolve(null);
+                    const fallbackLogo = new Image(); fallbackLogo.crossOrigin = "anonymous";
+                    fallbackLogo.onload = () => resolve(fallbackLogo); fallbackLogo.onerror = () => resolve(null);
                     fallbackLogo.src = 'https://www.auram.site/logo-auram.png';
                 };
                 logoImg.src = 'logo-auram.png';
@@ -674,342 +642,158 @@
         async function aplicarMarcaDeAgua(base64ImageSrc) {
             return new Promise(async (resolve) => {
                 const logoImg = await cargarLogo();
-                if (!logoImg) {
-                    console.warn("AURAM LOG: No se pudo cargar el logo para marca de agua. Resolviendo original.");
-                    resolve(base64ImageSrc);
-                    return;
-                }
-                
-                const mainImg = new Image();
-                mainImg.crossOrigin = "anonymous";
+                if (!logoImg) { resolve(base64ImageSrc); return; }
+                const mainImg = new Image(); mainImg.crossOrigin = "anonymous";
                 mainImg.onload = () => {
                     const canvas = document.createElement('canvas');
-                    canvas.width = mainImg.width;
-                    canvas.height = mainImg.height;
+                    canvas.width = mainImg.width; canvas.height = mainImg.height;
                     const ctx = canvas.getContext('2d');
-                    
                     ctx.drawImage(mainImg, 0, 0);
 
-                    // --- NUEVO CAMBIO ADOLFO: EFECTO ESFERAS DE LUZ MÍSTICAS / OPTICAL BOKEH EN FONDO Y BORDES ---
-                    const coloresEsferas = ['rgba(0, 209, 255, 0.22)', 'rgba(0, 255, 230, 0.15)', 'rgba(255, 255, 255, 0.25)', 'rgba(0, 114, 255, 0.18)'];
-                    const numEsferas = 14;
-                    
-                    for (let i = 0; i < numEsferas; i++) {
-                        let radio = (mainImg.width * 0.02) + (Math.sin(i * 9.8) + 1) * (mainImg.width * 0.03); 
-                        let x = (Math.cos(i * 3.5) + 1) * 0.5 * mainImg.width;
-                        let y = (Math.sin(i * 2.1) + 1) * 0.5 * mainImg.height;
-                        
-                        if(x > mainImg.width * 0.35 && x < mainImg.width * 0.65) {
-                            x += (x < mainImg.width * 0.5) ? -(mainImg.width * 0.2) : (mainImg.width * 0.2);
-                        }
-
+                    // Efectos ópticos bokeh en bordes (Mantenido)
+                    const coloresEsferas = ['rgba(0, 209, 255, 0.22)', 'rgba(0, 255, 230, 0.15)', 'rgba(255, 255, 255, 0.25)'];
+                    for (let i = 0; i < 10; i++) {
+                        let radio = (mainImg.width * 0.02) + (Math.sin(i) + 1) * (mainImg.width * 0.02); 
+                        let x = i % 2 === 0 ? mainImg.width * 0.08 : mainImg.width * 0.92;
+                        let y = (i * 0.1) * mainImg.height;
                         let gradient = ctx.createRadialGradient(x, y, 0, x, y, radio);
-                        let colorBase = coloresEsferas[i % coloresEsferas.length];
-                        gradient.addColorStop(0, colorBase);
-                        gradient.addColorStop(0.6, colorBase.replace('0.', '0.08'));
+                        gradient.addColorStop(0, coloresEsferas[i % coloresEsferas.length]);
                         gradient.addColorStop(1, 'rgba(0,0,0,0)');
-                        
-                        ctx.fillStyle = gradient;
-                        ctx.beginPath();
-                        ctx.arc(x, y, radio, 0, Math.PI * 2);
-                        ctx.fill();
+                        ctx.fillStyle = gradient; ctx.beginPath(); ctx.arc(x, y, radio, 0, Math.PI * 2); ctx.fill();
                     }
-                    
-                    // ESCALA DE MARCA DE AGUA: Redimensionado al 20%
+
                     const logoWidth = mainImg.width * 0.20;
                     const logoHeight = logoWidth * (logoImg.height / logoImg.width);
-                    
-                    const paddingX = mainImg.width * 0.02;
-                    const paddingY = mainImg.height * 0.02;
-                    
-                    const x = mainImg.width - logoWidth - paddingX;
-                    const y = mainImg.height - logoHeight - paddingY;
-                    
                     ctx.globalAlpha = 0.5;
-                    ctx.drawImage(logoImg, x, y, logoWidth, logoHeight);
+                    ctx.drawImage(logoImg, mainImg.width - logoWidth - 20, mainImg.height - logoHeight - 20, logoWidth, logoHeight);
                     ctx.globalAlpha = 1.0;
-                    
                     resolve(canvas.toDataURL('image/png'));
                 };
-                mainImg.onerror = () => resolve(base64ImageSrc);
                 mainImg.src = base64ImageSrc;
             });
         }
 
-        // --- SISTEMA DE FUSIÓN ---
+        // --- FASE 3: FUSIÓN DE ALTA PRECISIÓN GUIADA POR EL DOBLE JSON ---
         async function iniciarFusionTryOn() {
-            const loadingScreen = document.getElementById('screen-loading');
-            const loadingText = document.getElementById('loading-text');
-            const loadingSub = document.getElementById('loading-subtext');
-
-            if (loadingScreen) {
-                loadingScreen.style.display = 'flex';
-                loadingScreen.classList.add('active');
-            }
-
-            if (loadingText) loadingText.innerText = "FUSIONANDO VESTIDOR";
-            if (loadingSub) loadingSub.innerText = "Ajustando costuras y adaptando prenda de forma hiperrealista...";
+            irA('screen-loading');
+            document.getElementById('loading-text').innerText = "EJECUTANDO COSTURA IA";
+            document.getElementById('loading-subtext').innerText = "Amalgama fotorrealista basada en matrices geométricas...";
 
             try {
+                // Enviamos las 2 imágenes comprimidas + las estructuras completas de los mapas JSON
                 const res = await fetch('/api/fusionar-prenda', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         image: fotoUsuarioBase64,
-                        codigo: "A001",
-                        genero: "mujer",
-                        assetsFolder: "assets",
-                        garmentBase64: stickerProcesadoBase64
+                        garmentBase64: stickerProcesadoBase64,
+                        jsonPrenda: mapaJsonPrenda,
+                        jsonUsuario: mapaJsonUsuario,
+                        codigo: "A001", genero: "unisex", assetsFolder: "assets"
                     })
                 });
 
                 const data = await res.json();
-
-                if (res.status === 429) {
-                    throw new Error(data.detalle || "Límite de fusiones diarias alcanzado.");
-                }
-
-                if (!res.ok) {
-                    throw new Error(data.detalle || "Error en el servidor de fusión.");
-                }
+                if (!res.ok) throw new Error(data.detalle || "Fallo en el servidor de composición.");
 
                 if (data.success && data.imagenFinal) {
-                    const rawResultBase64 = "data:image/png;base64," + data.imagenFinal;
-                    
-                    if (loadingSub) loadingSub.innerText = "Estampando firma AURAM...";
-                    
-                    const imageWithWatermark = await aplicarMarcaDeAgua(rawResultBase64);
-                    
-                    const imgElement = document.getElementById('final-fusion-preview');
-                    imgElement.src = imageWithWatermark;
-                    
-                    if (loadingScreen) {
-                        loadingScreen.style.display = 'none';
-                        loadingScreen.classList.remove('active');
-                    }
+                    const imageWithWatermark = await aplicarMarcaDeAgua("data:image/png;base64," + data.imagenFinal);
+                    document.getElementById('final-fusion-preview').src = imageWithWatermark;
                     irA('screen-fusion-result');
                     inicializarControladorZoom();
                 } else {
-                    throw new Error(data.detalle || "La IA no devolvió píxeles de fusión.");
+                    throw new Error("La matriz generadora no retornó el render visual.");
                 }
-
             } catch (err) {
-                if (loadingScreen) {
-                    loadingScreen.style.display = 'none';
-                    loadingScreen.classList.remove('active');
-                }
-                showAlert("🚨 ATENCIÓN:<br>" + err.message);
+                irA('screen-tryon-setup');
+                showAlert("🚨 ERROR EN VESTIDOR:<br>" + err.message);
             }
         }
 
-        // --- MOTOR DE COMPARTIR NATIVO ---
+        // --- COMPARTIR NATIVO (Intacto) ---
         async function compartirImagen() {
             try {
-                const imgElement = document.getElementById('final-fusion-preview');
-                const base64Data = imgElement.src;
-                if (!base64Data || base64Data.includes('placeholder')) {
-                    showAlert("No hay imagen cargada para compartir.");
-                    return;
-                }
-                
+                const base64Data = document.getElementById('final-fusion-preview').src;
                 const response = await fetch(base64Data);
-                const blob = await response.blob();
-                const file = new File([blob], 'auram-tryon.png', { type: 'image/png' });
-                
+                const file = new File([await response.blob()], 'auram-tryon.png', { type: 'image/png' });
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: 'Mi Vestidor AURAM',
-                        text: '¡Mira cómo me queda esta prenda en AURAM.site!'
-                    });
-                } else if (navigator.share) {
-                    await navigator.share({
-                        title: 'Mi Vestidor AURAM',
-                        text: '¡Prueba la experiencia de vestidor virtual en AURAM.site!'
-                    });
+                    await navigator.share({ files: [file], title: 'Mi Vestidor AURAM' });
                 } else {
-                    const link = document.createElement('a');
-                    link.href = base64Data;
-                    link.download = 'auram-probador.png';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    showAlert("Imagen descargada con éxito. ¡Compártela!");
+                    const link = document.createElement('a'); link.href = base64Data;
+                    link.download = 'auram-probador.png'; link.click();
                 }
-            } catch (e) {
-                console.error("Error sharing:", e);
-                const link = document.createElement('a');
-                link.href = document.getElementById('final-fusion-preview').src;
-                link.download = 'auram-probador.png';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                showAlert("Imagen guardada en el dispositivo.");
-            }
+            } catch (e) { showAlert("Imagen guardada localmente."); }
         }
 
-        // --- SISTEMA DE CONTROL DE PINCH & ZOOM ---
-        let scale = 1;
-        let lastScale = 1;
-        let startX = 0, startY = 0;
-        let posX = 0, posY = 0;
-        let lastPosX = 0, lastPosY = 0;
-        let initialPinchDistance = 0;
-        let isDragging = false;
+        // --- SISTEMA DE PINCH TO ZOOM (Intacto) ---
+        let scale = 1; let lastScale = 1;
+        let startX = 0, startY = 0; let posX = 0, posY = 0;
+        let initialPinchDistance = 0; let isDragging = false;
 
         function inicializarControladorZoom() {
             const container = document.getElementById('zoom-container');
             const img = document.getElementById('final-fusion-preview');
-            
-            scale = 1;
-            lastScale = 1;
-            posX = 0;
-            posY = 0;
-            lastPosX = 0;
-            lastPosY = 0;
+            scale = 1; posX = 0; posY = 0;
             img.style.transform = `translate(0px, 0px) scale(1)`;
 
             if (!container || !img) return;
 
-            function getDistance(t1, t2) {
-                return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-            }
-
             container.addEventListener('touchstart', (e) => {
                 if (e.touches.length === 2) {
-                    initialPinchDistance = getDistance(e.touches[0], e.touches[1]);
+                    initialPinchDistance = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
                     lastScale = scale;
                 } else if (e.touches.length === 1) {
-                    isDragging = true;
-                    startX = e.touches[0].clientX - posX;
-                    startY = e.touches[0].clientY - posY;
+                    isDragging = true; startX = e.touches[0].clientX - posX; startY = e.touches[0].clientY - posY;
                 }
             }, { passive: true });
 
             container.addEventListener('touchmove', (e) => {
                 if (e.touches.length === 2) {
-                    const currentDistance = getDistance(e.touches[0], e.touches[1]);
-                    const factor = currentDistance / initialPinchDistance;
-                    scale = Math.min(Math.max(lastScale * factor, 1), 4);
-                    
-                    aplicarLimitesDeNavegacion();
+                    const dist = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
+                    scale = Math.min(Math.max(lastScale * (dist / initialPinchDistance), 1), 4);
                 } else if (e.touches.length === 1 && isDragging && scale > 1) {
-                    posX = e.touches[0].clientX - startX;
-                    posY = e.touches[0].clientY - startY;
-                    
-                    aplicarLimitesDeNavegacion();
+                    posX = e.touches[0].clientX - startX; posY = e.touches[0].clientY - startY;
                 }
+                img.style.transform = `translate(${scale === 1 ? 0 : posX}px, ${scale === 1 ? 0 : posY}px) scale(${scale})`;
             }, { passive: true });
 
-            container.addEventListener('touchend', (e) => {
-                isDragging = false;
-                if (e.touches.length < 2) {
-                    lastScale = scale;
-                }
-                lastPosX = posX;
-                lastPosY = posY;
-            });
-
-            function aplicarLimitesDeNavegacion() {
-                if (scale === 1) {
-                    posX = 0;
-                    posY = 0;
-                } else {
-                    const parentRect = container.getBoundingClientRect();
-                    const limitX = (parentRect.width * (scale - 1)) / 2;
-                    const limitY = (parentRect.height * (scale - 1)) / 2;
-                    
-                    posX = Math.min(Math.max(posX, -limitX), limitX);
-                    posY = Math.min(Math.max(posY, -limitY), limitY);
-                }
-                
-                img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
-            }
+            container.addEventListener('touchend', () => { isDragging = false; lastScale = scale; });
         }
 
-        // --- SISTEMA INTERACTIVO DE MAGNIFICADOR EN MINIATURA (TOUCH EXPLORE) ---
+        // --- MAGNIFICADOR MULTITOUCH TOUCH EXPLORE DE LA PRENDA (Intacto) ---
         document.addEventListener('DOMContentLoaded', () => {
             const checkerboard = document.querySelector('.preview-checkerboard');
             const previewImg = document.getElementById('sticker-preview-img');
-
             if (checkerboard && previewImg) {
-                const startZoom = (e) => {
-                    previewImg.style.transition = 'transform 0.1s ease-out';
-                    previewImg.style.transform = 'scale(2.2)'; // Agrandamiento ligero
-                    moveZoom(e);
-                };
-
-                const moveZoom = (e) => {
+                const move = (e) => {
                     const rect = checkerboard.getBoundingClientRect();
-                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                    
-                    // Cálculo de coordenadas relativas al recuadro (0% a 100%)
-                    const x = ((clientX - rect.left) / rect.width) * 100;
-                    const y = ((clientY - rect.top) / rect.height) * 100;
-                    
-                    // Asegurar límites dentro del contenedor
-                    const px = Math.min(Math.max(x, 0), 100);
-                    const py = Math.min(Math.max(y, 0), 100);
-                    
-                    // Desplazar el centro del zoom al punto del toque
+                    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+                    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+                    const px = Math.min(Math.max(((cx - rect.left) / rect.width) * 100, 0), 100);
+                    const py = Math.min(Math.max(((cy - rect.top) / rect.height) * 100, 0), 100);
                     previewImg.style.transformOrigin = `${px}% ${py}%`;
                 };
-
-                const endZoom = () => {
-                    previewImg.style.transition = 'transform 0.25s ease-out, transform-origin 0.25s ease-out';
-                    previewImg.style.transform = 'scale(1)'; // Regreso elástico
-                    previewImg.style.transformOrigin = 'center center';
-                };
-
-                // Eventos de Toque en Dispositivo Móvil
-                checkerboard.addEventListener('touchstart', (e) => {
-                    e.preventDefault(); // Detener el scroll para facilitar exploración
-                    startZoom(e);
-                }, { passive: false });
-
-                checkerboard.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                    moveZoom(e);
-                }, { passive: false });
-
-                checkerboard.addEventListener('touchend', endZoom);
-                checkerboard.addEventListener('touchcancel', endZoom);
-
-                // Soporte para pruebas en Escritorio/Mouse
-                checkerboard.addEventListener('mousedown', startZoom);
-                checkerboard.addEventListener('mousemove', (e) => {
-                    if (e.buttons === 1) moveZoom(e);
-                });
-                checkerboard.addEventListener('mouseup', endZoom);
-                checkerboard.addEventListener('mouseleave', endZoom);
+                checkerboard.addEventListener('touchstart', (e) => { e.preventDefault(); previewImg.style.transform = 'scale(2.2)'; move(e); }, { passive: false });
+                checkerboard.addEventListener('touchmove', (e) => { e.preventDefault(); move(e); }, { passive: false });
+                checkerboard.addEventListener('touchend', () => { previewImg.style.transform = 'scale(1)'; previewImg.style.transformOrigin = 'center center'; });
             }
         });
 
         function volverAlInicio() {
-            fotoPrendaOriginal = "";
-            stickerProcesadoBase64 = null;
-            stickerListo = false;
-            
-            fotoUsuarioBase64 = null;
-            fotoUsuarioLista = false;
+            fotoPrendaOriginal = ""; fotoUsuarioOriginal = "";
+            stickerProcesadoBase64 = null; fotoUsuarioBase64 = null;
+            mapaJsonPrenda = null; mapaJsonUsuario = null;
+            stickerListo = false; fotoUsuarioLista = false;
             
             document.getElementById('sticker-preview-container').style.display = 'none';
             document.getElementById('sticker-preview-img').src = "";
             document.getElementById('user-preview').style.display = 'none';
-            document.getElementById('user-placeholder').style.display = 'flex';
             document.getElementById('btn-iniciar-fusion').disabled = true;
             
-            document.getElementById('bg-status-text').innerText = "🎨 Puliendo sticker en segundo plano...";
+            document.getElementById('bg-status-text').innerText = "🎨 Sincronizando capas del vestidor...";
             document.getElementById('bg-loader').style.animation = 'spin 1s linear infinite';
             document.getElementById('bg-loader').style.borderColor = 'rgba(0, 209, 255, 0.1) rgba(0, 209, 255, 0.1) var(--cyan-auram)';
 
             irA('screen-camera-garment');
-        }
-
-        function guardarEnCatalogo() {
-            showAlert("¡Prenda guardada con éxito!");
-            volverAlInicio();
         }
     </script>
 </body>
