@@ -76,7 +76,7 @@ export default async function handler(req, res) {
                 responseMimeType: "application/json",
                 temperature: 0.0
             },
-           serviceTier: "flex",
+          
             safetySettings
             
         });
