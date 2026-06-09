@@ -62,7 +62,7 @@
             backdrop-filter: blur(10px); max-width: 320px;
         }
 
-        /* Contenedor de cámara gigante (Ocupa el 80% de la altura de la pantalla) */
+        /* Contenedor de cámara gigante (Ocupa el 72% de la altura de la pantalla) */
         .camera-viewport-container {
             width: 92vw;
             height: 72vh;
@@ -253,9 +253,11 @@
                 <li>🔹 Extiende bien las mangas y piernas de la ropa.</li>
             </ul>
         </div>
-        <div class="bottom-nav">
-            <button class="btn-auram" onclick="irA('screen-camera-garment')">Abrir Cámara</button>
+        <div class="bottom-nav" style="flex-direction: column; align-items: center; gap: 10px; bottom: 25px;">
+            <button class="btn-auram" onclick="irA('screen-camera-garment')">📸 Abrir Cámara</button>
+            <button class="btn-auram" style="background:#222; border: 1px solid var(--cyan-auram);" onclick="document.getElementById('garment-gallery-file').click()">🖼️ Subir de Galería</button>
         </div>
+        <input type="file" id="garment-gallery-file" accept="image/*" style="display: none;" onchange="subirPrendaGaleria(event)">
     </div>
 
     <div id="screen-camera-garment" class="screen">
@@ -266,10 +268,9 @@
             </div>
         </div>
         <div style="width: 100%; display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; width: 85%; max-width: 320px;">
+            <button class="btn-auram" style="background:#222; border: 1px solid #ff3b30; flex: 1; padding: 14px 10px; font-size: 0.75rem;" onclick="irA('screen-instructions')">Cancelar</button>
             <button class="btn-auram" style="flex: 1; padding: 14px 10px; font-size: 0.75rem;" onclick="capturarPrenda()">Capturar</button>
-            <button class="btn-auram" style="background:#222; border: 1px solid var(--cyan-auram); flex: 1; padding: 14px 10px; font-size: 0.75rem;" onclick="document.getElementById('garment-gallery-file').click()">Galería</button>
         </div>
-        <input type="file" id="garment-gallery-file" accept="image/*" style="display: none;" onchange="subirPrendaGaleria(event)">
     </div>
 
     <div id="screen-confirm-garment" class="screen">
@@ -277,7 +278,7 @@
         <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 15px;">¿FOTO DE PRENDA CORRECTA?</h3>
         <img id="photo-preview">
         <div class="bottom-nav">
-            <button class="btn-auram" style="background:#333; width: 120px;" onclick="irA('screen-camera-garment')">REPETIR</button>
+            <button class="btn-auram" style="background:#333; width: 120px;" onclick="irA('screen-instructions')">REPETIR</button>
             <button class="btn-auram" style="width: 120px;" onclick="procesarFase1Extraccion()">PROCESAR</button>
         </div>
     </div>
@@ -291,10 +292,9 @@
         </div>
         <p style="font-size: 0.7rem; color: #888; margin-top: -5px; margin-bottom: 10px;">Encuadra tu cuerpo completo o torso de forma frontal</p>
         <div style="width: 100%; display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; width: 85%; max-width: 320px;">
+            <button class="btn-auram" style="background:#222; border: 1px solid #ff3b30; flex: 1; padding: 14px 10px; font-size: 0.75rem;" onclick="irA('screen-tryon-setup')">Cancelar</button>
             <button class="btn-auram" style="flex: 1; padding: 14px 10px; font-size: 0.75rem;" onclick="capturarUsuario()">Capturar</button>
-            <button class="btn-auram" style="background:#222; border: 1px solid var(--cyan-auram); flex: 1; padding: 14px 10px; font-size: 0.75rem;" onclick="document.getElementById('user-gallery-file').click()">Galería</button>
         </div>
-        <input type="file" id="user-gallery-file" accept="image/*" style="display: none;" onchange="subirUsuarioGaleria(event)">
     </div>
 
     <div id="screen-confirm-user" class="screen">
@@ -302,7 +302,7 @@
         <h3 style="color:var(--cyan-auram); font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 15px;">¿TU FOTO ES CORRECTA?</h3>
         <img id="user-photo-preview">
         <div class="bottom-nav">
-            <button class="btn-auram" style="background:#333; width: 120px;" onclick="irA('screen-camera-user')">REPETIR</button>
+            <button class="btn-auram" style="background:#333; width: 120px;" onclick="cancelarConfirmacionUsuario()">REPETIR</button>
             <button class="btn-auram" style="width: 120px;" onclick="procesarFase2Anatomia()">ANALIZAR</button>
         </div>
     </div>
@@ -320,14 +320,22 @@
                 </div>
                 <div class="tag-info" style="font-size:0.5rem;">Prenda Map</div>
             </div>
+            
             <div id="user-preview-container" style="text-align: center;">
-                <img id="user-preview" onclick="irA('screen-camera-user')" title="Toca para cambiar tu foto">
+                <img id="user-preview" style="display: none;" onclick="alternarMetodoCargaUsuario()" title="Toca para cambiar tu foto">
+                
+                <div id="user-placeholder" style="width: 100px; height: 100px; border: 1px dashed rgba(0, 209, 255, 0.3); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); gap: 8px; padding: 5px;">
+                    <button class="btn-auram" style="padding: 6px 10px; font-size: 0.55rem; width: 85px;" onclick="irA('screen-camera-user')">📸 Cámara</button>
+                    <button class="btn-auram" style="background:#222; border: 1px solid var(--cyan-auram); padding: 6px 10px; font-size: 0.55rem; width: 85px;" onclick="document.getElementById('user-gallery-file-direct').click()">🖼️ Galería</button>
+                </div>
                 <div class="tag-info" style="font-size:0.5rem; color:#00ff88;">Usuario Map</div>
             </div>
         </div>
+        
+        <input type="file" id="user-gallery-file-direct" accept="image/*" style="display: none;" onchange="subirUsuarioGaleriaDirecto(event)">
 
         <h3 style="color:var(--cyan-auram); font-size: 0.85rem; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase;">Vestidor Listo</h3>
-        <p style="font-size: 0.72rem; color: #888; max-width: 290px; margin-bottom: 15px; line-height: 1.5;">Los mapas lógicos anatómicos se han consolidado con éxito.</p>
+        <p style="font-size: 0.72rem; color: #888; max-width: 290px; margin-bottom: 15px; line-height: 1.5;">Completa tu perfil para activar la costura por coordenadas.</p>
 
         <div class="bottom-nav" style="flex-direction: row; justify-content: center; align-items: center; bottom: 30px; width: 85%; gap: 12px;">
             <button class="btn-auram" style="background:#222; width: 110px; padding: 12px 10px; font-size: 0.75rem;" onclick="volverAlInicio()">REPETIR</button>
@@ -374,6 +382,7 @@
 
         let stickerListo = false;
         let fotoUsuarioLista = false;
+        let vieneDeGaleriaUsuario = false; // Flag para controlar el ruteo del botón repetir
 
         function showAlert(msg) {
             const box = document.getElementById('custom-alert-box');
@@ -475,7 +484,6 @@
         async function encenderCamaraUsuario() {
             const video = document.getElementById('webcam-user');
             try {
-                // Se solicita facingMode "user" (frontal) por defecto para el probador del cliente
                 streamUsuario = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: "user", width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false
                 });
@@ -495,21 +503,44 @@
             c.width = v.videoWidth; c.height = v.videoHeight;
             c.getContext('2d').drawImage(v, 0, 0);
             fotoUsuarioOriginal = c.toDataURL('image/jpeg', 0.95).split(',')[1];
+            vieneDeGaleriaUsuario = false;
             document.getElementById('user-photo-preview').src = "data:image/jpeg;base64," + fotoUsuarioOriginal;
             irA('screen-confirm-user');
         }
 
-        async function subirUsuarioGaleria(event) {
+        // --- MODIFICACIÓN PRIVACIDAD: SOPORTE DE GALERÍA INDEPENDIENTE DE USUARIO ---
+        async function subirUsuarioGaleriaDirecto(event) {
             const file = event.target.files[0];
             if (file) {
+                irA('screen-loading');
+                document.getElementById('loading-text').innerText = "PROCESANDO IMAGEN";
+                document.getElementById('loading-subtext').innerText = "Cargando archivo local de galería de forma segura...";
+                
                 const reader = new FileReader();
                 reader.onload = async function(e) {
                     fotoUsuarioOriginal = e.target.result.split(',')[1];
+                    vieneDeGaleriaUsuario = true;
                     document.getElementById('user-photo-preview').src = "data:image/jpeg;base64," + fotoUsuarioOriginal;
                     irA('screen-confirm-user');
                 };
                 reader.readAsDataURL(file);
             }
+        }
+
+        function cancelarConfirmacionUsuario() {
+            if (vieneDeGaleriaUsuario) {
+                irA('screen-tryon-setup');
+            } else {
+                irA('screen-camera-user');
+            }
+        }
+
+        function alternarMetodoCargaUsuario() {
+            fotoUsuarioLista = false;
+            document.getElementById('user-preview').style.display = 'none';
+            document.getElementById('user-placeholder').style.display = 'flex';
+            document.getElementById('btn-iniciar-fusion').disabled = true;
+            actualizarBarraEstadoPill();
         }
 
         // --- RECORTE GEOMÉTRICO LOCAL (Canvas HTML5) ---
@@ -535,9 +566,9 @@
 
         // --- FASE 1: PROCESAMIENTO EN SEGUNDO PLANO DE LA PRENDA ---
         async function procesarFase1Extraccion() {
-            // ENFOQUE PARALELO: Desparamos la petición HTTP al servidor pero saltamos de inmediato a capturar el cuerpo
-            irA('screen-camera-user'); 
-            showAlert("🎨 Procesando la prenda. Ahora captura tu foto para el vestidor.");
+            // ENFOQUE PARALELO PRIVACIDAD: Saltamos directo a la sala de setup sin forzar el hardware óptico
+            irA('screen-tryon-setup'); 
+            showAlert("🎨 Procesando prenda en background. Elige tu foto en la sección Usuario Map.");
 
             try {
                 const prendaComprimida = await comprimirBase64(fotoPrendaOriginal, 1600, false);
@@ -548,19 +579,16 @@
 
                 const data1 = await res1.json();
                 
-                // Si el escudo de seguridad detecta lencería o bañador, frenar el flujo completo
                 if (data1.is_safe_garment === false || data1.success === false) {
                     volverAlInicio();
                     showAlert("🚨 PRENDA RECHAZADA:<br>" + (data1.rejection_reason || data1.detalle));
                     return;
                 }
 
-                // Almacenar el mapa lúdico del Sticker
                 mapaJsonPrenda = data1;
                 stickerProcesadoBase64 = await recortarPrendaCliente(prendaComprimida, data1.coordenadas);
                 stickerListo = true;
 
-                // Actualizar la interfaz si el usuario ya está esperando en la sala de setup
                 const previewImg = document.getElementById('sticker-preview-img');
                 const previewContainer = document.getElementById('sticker-preview-container');
                 if (previewImg && previewContainer) {
@@ -590,16 +618,16 @@
                 const data2 = await res2.json();
 
                 if (data2.is_adult_user === false || data2.success === false) {
-                    irA('screen-camera-user');
+                    irA('screen-tryon-setup');
                     showAlert("🚨 ACCESO DENEGADO:<br>" + (data2.rejection_reason || data2.detalle));
                     return;
                 }
 
-                // Guardar el mapa lúdico del Muñeco articulado
                 mapaJsonUsuario = data2;
                 fotoUsuarioLista = true;
 
-                // Pintar previsualización del cuerpo
+                // Ocultar placeholder y pintar preview liso
+                document.getElementById('user-placeholder').style.display = 'none';
                 const userPreview = document.getElementById('user-preview');
                 userPreview.src = "data:image/jpeg;base64," + fotoUsuarioBase64;
                 userPreview.style.display = 'block';
@@ -622,10 +650,12 @@
                 document.getElementById('btn-iniciar-fusion').disabled = false;
             } else if (!stickerListo && fotoUsuarioLista) {
                 if (bgStatus) bgStatus.innerText = "⏳ Esperando render final de la prenda...";
+            } else if (stickerListo && !fotoUsuarioLista) {
+                if (bgStatus) bgStatus.innerText = "⏳ Configura tu perfil en Usuario Map para continuar...";
             }
         }
 
-        // --- MARCA DE AGUA (Intacto) ---
+        // --- MARCA DE AGUA CON CONTROLES RADIALES CALIBRADOS ---
         function cargarLogo() {
             return new Promise((resolve) => {
                 const logoImg = new Image(); logoImg.crossOrigin = "anonymous";
@@ -639,62 +669,55 @@
             });
         }
 
-     async function aplicarMarcaDeAgua(base64ImageSrc) {
-    return new Promise(async (resolve) => {
-        const logoImg = await cargarLogo();
-        if (!logoImg) { resolve(base64ImageSrc); return; }
-        const mainImg = new Image(); mainImg.crossOrigin = "anonymous";
-        mainImg.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = mainImg.width; canvas.height = mainImg.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(mainImg, 0, 0);
+        async function aplicarMarcaDeAgua(base64ImageSrc) {
+            return new Promise(async (resolve) => {
+                const logoImg = await cargarLogo();
+                if (!logoImg) { resolve(base64ImageSrc); return; }
+                const mainImg = new Image(); mainImg.crossOrigin = "anonymous";
+                mainImg.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = mainImg.width; canvas.height = mainImg.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(mainImg, 0, 0);
 
-            // --- RECTIFICACIÓN ADOLFO: EFECTO ESFERAS DE LUZ MÍSTICAS PRONUNCIADAS (ANTI-FRAUDE) ---
-            // Colores cian, azul eléctrico y blanco resplandeciente idénticos a tu captura
-            const coloresEsferas = [
-                'rgba(0, 209, 255, 0.45)',  // Cian Intenso
-                'rgba(0, 114, 255, 0.40)',  // Azul Eléctrico
-                'rgba(255, 255, 255, 0.50)', // Destello Blanco central
-                'rgba(0, 255, 230, 0.35)'   // Turquesa Místico
-            ];
-            
-            // Incrementamos a 18 esferas para generar constelaciones de luz más marcadas en el fondo
-            const numEsferas = 18; 
-            
-            for (let i = 0; i < numEsferas; i++) {
-                // Aumentamos el tamaño de los radios para que el aura sea más expansiva y visible
-                let radio = (mainImg.width * 0.05) + (Math.sin(i * 4.5) + 1) * (mainImg.width * 0.06); 
-                
-                // Mapeo periférico: se posicionan estratégicamente en los laterales e inferiores del lienzo
-                let x = i % 2 === 0 ? mainImg.width * (0.05 + (i * 0.02)) : mainImg.width * (0.95 - (i * 0.02));
-                let y = (i / numEsferas) * mainImg.height;
-                
-                // Creamos el degradado radial para simular el destello óptico difuminado (Bokeh)
-                let gradient = ctx.createRadialGradient(x, y, 0, x, y, radio);
-                let colorBase = coloresEsferas[i % coloresEsferas.length];
-                
-                gradient.addColorStop(0, colorBase); // Núcleo encendido
-                gradient.addColorStop(0.4, colorBase.replace('0.', '0.15')); // Difusión media
-                gradient.addColorStop(1, 'rgba(0,0,0,0)'); // Desvanecimiento total
-                
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(x, y, radio, 0, Math.PI * 2);
-                ctx.fill();
-            }
+                    // --- RECTIFICACIÓN ADOLFO: EFECTO ESFERAS DE LUZ MÍSTICAS PRONUNCIADAS (ANTI-FRAUDE) ---
+                    const coloresEsferas = [
+                        'rgba(0, 209, 255, 0.45)',  
+                        'rgba(0, 114, 255, 0.40)',  
+                        'rgba(255, 255, 255, 0.50)', 
+                        'rgba(0, 255, 230, 0.35)'   
+                    ];
+                    
+                    const numEsferas = 18; 
+                    
+                    for (let i = 0; i < numEsferas; i++) {
+                        let radio = (mainImg.width * 0.05) + (Math.sin(i * 4.5) + 1) * (mainImg.width * 0.06); 
+                        let x = i % 2 === 0 ? mainImg.width * (0.05 + (i * 0.02)) : mainImg.width * (0.95 - (i * 0.02));
+                        let y = (i / numEsferas) * mainImg.height;
+                        
+                        let gradient = ctx.createRadialGradient(x, y, 0, x, y, radio);
+                        let colorBase = coloresEsferas[i % coloresEsferas.length];
+                        
+                        gradient.addColorStop(0, colorBase); 
+                        gradient.addColorStop(0.4, colorBase.replace('0.', '0.15')); 
+                        gradient.addColorStop(1, 'rgba(0,0,0,0)'); 
+                        
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(x, y, radio, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
 
-            // Conservamos la marca de agua intacta en la esquina inferior
-            const logoWidth = mainImg.width * 0.20;
-            const logoHeight = logoWidth * (logoImg.height / logoImg.width);
-            ctx.globalAlpha = 0.5;
-            ctx.drawImage(logoImg, mainImg.width - logoWidth - 20, mainImg.height - logoHeight - 20, logoWidth, logoHeight);
-            ctx.globalAlpha = 1.0;
-            resolve(canvas.toDataURL('image/png'));
-        };
-        mainImg.src = base64ImageSrc;
-    });
-}
+                    const logoWidth = mainImg.width * 0.20;
+                    const logoHeight = logoWidth * (logoImg.height / logoImg.width);
+                    ctx.globalAlpha = 0.5;
+                    ctx.drawImage(logoImg, mainImg.width - logoWidth - 20, mainImg.height - logoHeight - 20, logoWidth, logoHeight);
+                    ctx.globalAlpha = 1.0;
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                mainImg.src = base64ImageSrc;
+            });
+        }
 
         // --- FASE 3: FUSIÓN DE ALTA PRECISIÓN GUIADA POR EL DOBLE JSON ---
         async function iniciarFusionTryOn() {
@@ -703,7 +726,6 @@
             document.getElementById('loading-subtext').innerText = "Amalgama fotorrealista basada en matrices geométricas...";
 
             try {
-                // Enviamos las 2 imágenes comprimidas + las estructuras completas de los mapas JSON
                 const res = await fetch('/api/fusionar-prenda', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -806,17 +828,19 @@
             stickerProcesadoBase64 = null; fotoUsuarioBase64 = null;
             mapaJsonPrenda = null; mapaJsonUsuario = null;
             stickerListo = false; fotoUsuarioLista = false;
+            vieneDeGaleriaUsuario = false;
             
             document.getElementById('sticker-preview-container').style.display = 'none';
             document.getElementById('sticker-preview-img').src = "";
             document.getElementById('user-preview').style.display = 'none';
+            document.getElementById('user-placeholder').style.display = 'flex';
             document.getElementById('btn-iniciar-fusion').disabled = true;
             
             document.getElementById('bg-status-text').innerText = "🎨 Sincronizando capas del vestidor...";
             document.getElementById('bg-loader').style.animation = 'spin 1s linear infinite';
             document.getElementById('bg-loader').style.borderColor = 'rgba(0, 209, 255, 0.1) rgba(0, 209, 255, 0.1) var(--cyan-auram)';
 
-            irA('screen-camera-garment');
+            irA('screen-instructions');
         }
     </script>
 </body>
