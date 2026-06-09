@@ -639,39 +639,62 @@
             });
         }
 
-        async function aplicarMarcaDeAgua(base64ImageSrc) {
-            return new Promise(async (resolve) => {
-                const logoImg = await cargarLogo();
-                if (!logoImg) { resolve(base64ImageSrc); return; }
-                const mainImg = new Image(); mainImg.crossOrigin = "anonymous";
-                mainImg.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = mainImg.width; canvas.height = mainImg.height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(mainImg, 0, 0);
+     async function aplicarMarcaDeAgua(base64ImageSrc) {
+    return new Promise(async (resolve) => {
+        const logoImg = await cargarLogo();
+        if (!logoImg) { resolve(base64ImageSrc); return; }
+        const mainImg = new Image(); mainImg.crossOrigin = "anonymous";
+        mainImg.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = mainImg.width; canvas.height = mainImg.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(mainImg, 0, 0);
 
-                    // Efectos ópticos bokeh en bordes (Mantenido)
-                    const coloresEsferas = ['rgba(0, 209, 255, 0.22)', 'rgba(0, 255, 230, 0.15)', 'rgba(255, 255, 255, 0.25)'];
-                    for (let i = 0; i < 10; i++) {
-                        let radio = (mainImg.width * 0.02) + (Math.sin(i) + 1) * (mainImg.width * 0.02); 
-                        let x = i % 2 === 0 ? mainImg.width * 0.08 : mainImg.width * 0.92;
-                        let y = (i * 0.1) * mainImg.height;
-                        let gradient = ctx.createRadialGradient(x, y, 0, x, y, radio);
-                        gradient.addColorStop(0, coloresEsferas[i % coloresEsferas.length]);
-                        gradient.addColorStop(1, 'rgba(0,0,0,0)');
-                        ctx.fillStyle = gradient; ctx.beginPath(); ctx.arc(x, y, radio, 0, Math.PI * 2); ctx.fill();
-                    }
+            // --- RECTIFICACIÓN ADOLFO: EFECTO ESFERAS DE LUZ MÍSTICAS PRONUNCIADAS (ANTI-FRAUDE) ---
+            // Colores cian, azul eléctrico y blanco resplandeciente idénticos a tu captura
+            const coloresEsferas = [
+                'rgba(0, 209, 255, 0.45)',  // Cian Intenso
+                'rgba(0, 114, 255, 0.40)',  // Azul Eléctrico
+                'rgba(255, 255, 255, 0.50)', // Destello Blanco central
+                'rgba(0, 255, 230, 0.35)'   // Turquesa Místico
+            ];
+            
+            // Incrementamos a 18 esferas para generar constelaciones de luz más marcadas en el fondo
+            const numEsferas = 18; 
+            
+            for (let i = 0; i < numEsferas; i++) {
+                // Aumentamos el tamaño de los radios para que el aura sea más expansiva y visible
+                let radio = (mainImg.width * 0.05) + (Math.sin(i * 4.5) + 1) * (mainImg.width * 0.06); 
+                
+                // Mapeo periférico: se posicionan estratégicamente en los laterales e inferiores del lienzo
+                let x = i % 2 === 0 ? mainImg.width * (0.05 + (i * 0.02)) : mainImg.width * (0.95 - (i * 0.02));
+                let y = (i / numEsferas) * mainImg.height;
+                
+                // Creamos el degradado radial para simular el destello óptico difuminado (Bokeh)
+                let gradient = ctx.createRadialGradient(x, y, 0, x, y, radio);
+                let colorBase = coloresEsferas[i % coloresEsferas.length];
+                
+                gradient.addColorStop(0, colorBase); // Núcleo encendido
+                gradient.addColorStop(0.4, colorBase.replace('0.', '0.15')); // Difusión media
+                gradient.addColorStop(1, 'rgba(0,0,0,0)'); // Desvanecimiento total
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radio, 0, Math.PI * 2);
+                ctx.fill();
+            }
 
-                    const logoWidth = mainImg.width * 0.20;
-                    const logoHeight = logoWidth * (logoImg.height / logoImg.width);
-                    ctx.globalAlpha = 0.5;
-                    ctx.drawImage(logoImg, mainImg.width - logoWidth - 20, mainImg.height - logoHeight - 20, logoWidth, logoHeight);
-                    ctx.globalAlpha = 1.0;
-                    resolve(canvas.toDataURL('image/png'));
-                };
-                mainImg.src = base64ImageSrc;
-            });
-        }
+            // Conservamos la marca de agua intacta en la esquina inferior
+            const logoWidth = mainImg.width * 0.20;
+            const logoHeight = logoWidth * (logoImg.height / logoImg.width);
+            ctx.globalAlpha = 0.5;
+            ctx.drawImage(logoImg, mainImg.width - logoWidth - 20, mainImg.height - logoHeight - 20, logoWidth, logoHeight);
+            ctx.globalAlpha = 1.0;
+            resolve(canvas.toDataURL('image/png'));
+        };
+        mainImg.src = base64ImageSrc;
+    });
+}
 
         // --- FASE 3: FUSIÓN DE ALTA PRECISIÓN GUIADA POR EL DOBLE JSON ---
         async function iniciarFusionTryOn() {
