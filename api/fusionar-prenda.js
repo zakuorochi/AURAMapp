@@ -1,5 +1,3 @@
-import fetch from 'node-fetch'; // Vercel lo incluye nativamente en Node.js
-
 export default async function handler(req, res) {
     // 1. Configurar cabeceras CORS para que tu index.html se comunique sin bloqueos
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,17 +11,23 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: "Método no permitido. Usa POST." });
     }
-try {
-        // 1. Recibimos los nombres exactos que manda tu index.html
-        const { image, garmentBase64, jsonPrenda, jsonUsuario } = req.body;
+
+    try {
+        // BLINDAJE: Si req.body llega como string por el peso del Base64, lo transformamos a objeto
+        let dataCuerpo = req.body;
+        if (typeof dataCuerpo === 'string') {
+            dataCuerpo = JSON.parse(dataCuerpo);
+        }
+
+        // 2. Recibimos los nombres exactos que manda tu index.html
+        const { image, garmentBase64, jsonPrenda, jsonUsuario } = dataCuerpo;
 
         // Validación de seguridad con los nuevos nombres
         if (!garmentBase64 || !image) {
             throw new Error("Faltan las imágenes base64 en la petición.");
         }
 
-        // 2. Preparar el prompt integrando ambos mapas JSON que mandó el frontend
-       // 2. Preparar el prompt en inglés técnico para máxima precisión en la costura
+        // 3. Preparar el prompt en inglés técnico para máxima precisión en la costura
         const promptCostura = `You are a highly advanced AI digital tailoring and virtual try-on system for fashion retail. 
         Your task is to photorealistically merge the garment from Photo 1 onto the body of the person in Photo 2.
         Use the following anatomical anchor points to fit the garment perfectly: 
@@ -31,7 +35,7 @@ try {
         - User Coordinates: ${JSON.stringify(jsonUsuario)}
         Strictly preserve the exact design, textures, seams, fabric flow, and true color of the garment. Do not alter the user's face, background, or environmental lighting. The final image must look like a high-end, unedited fashion photograph.`;
 
-        // 3. Petición directa al endpoint oficial de xAI (Grok Imagine)
+        // 4. Petición directa al endpoint oficial de xAI (Grok Imagine)
         const responseXAI = await fetch("https://api.x.ai/v1/images/edits", {
             method: "POST",
             headers: {
@@ -50,7 +54,8 @@ try {
                 response_format: "b64_json"
             })
         });
-        // 4. Procesar la respuesta del servidor de xAI
+
+        // 5. Procesar la respuesta del servidor de xAI
         const dataXAI = await responseXAI.json();
 
         if (!responseXAI.ok) {
@@ -61,8 +66,7 @@ try {
         // Extraemos la cadena base64 limpia que nos devuelve Grok
         const imagenFusionadaBase64 = dataXAI.data[0].b64_json;
 
-        // 5. Enviar el resultado de vuelta a tu index.html
-        // Mantenemos el formato exacto que tu frontend ya sabe leer y pintar en pantalla
+        // 6. Enviar el resultado de vuelta a tu index.html
         return res.status(200).json({ 
             success: true, 
             resultado: `data:image/jpeg;base64,${imagenFusionadaBase64}` 
