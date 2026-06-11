@@ -13,42 +13,43 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: "Método no permitido. Usa POST." });
     }
+try {
+        // 1. Recibimos los nombres exactos que manda tu index.html
+        const { image, garmentBase64, jsonPrenda, jsonUsuario } = req.body;
 
-    try {
-        const { fotoPrendaBase64, fotoUsuarioBase64, coordenadasJson } = req.body;
-
-        // Validación de seguridad para que el backend no procese basura
-        if (!fotoPrendaBase64 || !fotoUsuarioBase64) {
+        // Validación de seguridad con los nuevos nombres
+        if (!garmentBase64 || !image) {
             throw new Error("Faltan las imágenes base64 en la petición.");
         }
 
-        // 2. Preparar el prompt ultra enfocado en la costura textil por coordenadas
-        const promptCostura = `Eres AURAM, un sistema de costura digital por IA para retail de moda en Lima. 
-        Debes fusionar de forma fotorrealista la prenda de vestir de la Foto 1 en el cuerpo de la persona de la Foto 2.
-        Usa estos puntos de anclaje anatómicos del cuerpo para encajar la prenda perfectamente: ${JSON.stringify(coordenadasJson)}.
-        Conserva el diseño, texturas, costuras y color exacto de la prenda. Mantén el fondo y la iluminación ambiental intactos.`;
+        // 2. Preparar el prompt integrando ambos mapas JSON que mandó el frontend
+       // 2. Preparar el prompt en inglés técnico para máxima precisión en la costura
+        const promptCostura = `You are a highly advanced AI digital tailoring and virtual try-on system for fashion retail. 
+        Your task is to photorealistically merge the garment from Photo 1 onto the body of the person in Photo 2.
+        Use the following anatomical anchor points to fit the garment perfectly: 
+        - Garment Coordinates: ${JSON.stringify(jsonPrenda)}
+        - User Coordinates: ${JSON.stringify(jsonUsuario)}
+        Strictly preserve the exact design, textures, seams, fabric flow, and true color of the garment. Do not alter the user's face, background, or environmental lighting. The final image must look like a high-end, unedited fashion photograph.`;
 
         // 3. Petición directa al endpoint oficial de xAI (Grok Imagine)
         const responseXAI = await fetch("https://api.x.ai/v1/images/edits", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${process.env.XAI_API_KEY}` // Jala la llave de Vercel
+                "Authorization": `Bearer ${process.env.XAI_API_KEY}`
             },
             body: JSON.stringify({
-                model: "grok-imagine-image",  // Tu modelo económico de $0.022 USD
+                model: "grok-imagine-image",
                 prompt: promptCostura,
-                // xAI requiere un arreglo estructurado en JSON para la multientrada de imágenes
                 images: [
-                    { type: "base64", data: fotoPrendaBase64, label: "Foto 1: Prenda" },
-                    { type: "base64", data: fotoUsuarioBase64, label: "Foto 2: Usuario" }
+                    { type: "base64", data: garmentBase64, label: "Foto 1: Prenda" }, // garmentBase64 = Prenda
+                    { type: "base64", data: image, label: "Foto 2: Usuario" }         // image = Usuario
                 ],
                 n: 1,
-                resolution: "1k",            // Forzamos 1024px para amarrar el costo bajo
-                response_format: "b64_json"  // Le pedimos que nos devuelva Base64 directo para el Canvas
+                resolution: "1k",
+                response_format: "b64_json"
             })
         });
-
         // 4. Procesar la respuesta del servidor de xAI
         const dataXAI = await responseXAI.json();
 
