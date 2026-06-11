@@ -42,17 +42,20 @@ export default async function handler(req, res) {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${process.env.XAI_API_KEY}`
             },
+           // ... código anterior ...
             body: JSON.stringify({
                 model: "grok-imagine-image",
                 prompt: promptCostura,
                 images: [
-                    { type: "base64", data: garmentBase64, label: "Foto 1: Prenda" }, // garmentBase64 = Prenda
-                    { type: "base64", data: image, label: "Foto 2: Usuario" }         // image = Usuario
+                    // Grok exige que el Base64 se envíe como un "url" con el prefijo incluido
+                    { url: `data:image/jpeg;base64,${garmentBase64}` },
+                    { url: `data:image/jpeg;base64,${image}` }
                 ],
                 n: 1,
                 resolution: "1k",
                 response_format: "b64_json"
             })
+            // ... código siguiente ...
         });
 
         // 5. Procesar la respuesta del servidor de xAI
