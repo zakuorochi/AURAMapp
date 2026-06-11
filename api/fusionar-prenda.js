@@ -28,14 +28,22 @@ export default async function handler(req, res) {
         }
 
         // 3. Preparar el prompt en inglés técnico para máxima precisión en la costura
-        const promptCostura = `You are a highly advanced AI digital tailoring and virtual try-on system for fashion retail. 
-        Your task is to photorealistically merge the garment from Photo 1 onto the body of the person in Photo 2.
-        Use the following anatomical anchor points to fit the garment perfectly: 
-        - Garment Coordinates: ${JSON.stringify(jsonPrenda)}
-        - User Coordinates: ${JSON.stringify(jsonUsuario)}
-        Strictly preserve the exact design, textures, seams, fabric flow, and true color of the garment. Do not alter the user's face, background, or environmental lighting. The final image must look like a high-end, unedited fashion photograph.`;
+       // 3. Prompt estricto Anti-Alucinaciones y control de pose
+        const promptCostura = `TASK: Expert Virtual Try-On. You must realistically dress the person in <IMAGE_1> using ONLY the exact garment from <IMAGE_0>.
 
-        // 4. Petición directa al endpoint oficial de xAI (Grok Imagine)
+STRICT ANATOMY AND POSE RULES:
+1. KEEP the exact original pose of the person in <IMAGE_1>.
+2. DO NOT add objects. The person MUST NOT be holding a phone or camera.
+3. DO NOT generate extra limbs, hands, or arms. Keep the original hands exactly where they are.
+4. DO NOT alter the user's face, facial hair, skin tone, or the original background environment.
+
+FITTING INSTRUCTIONS:
+- Extract the clothing design, texture, and color from <IMAGE_0>.
+- Wrap and tailor it naturally over the user's torso in <IMAGE_1>.
+- Reference these anatomical coordinates ONLY to understand the body scale and position, do not print them: ${JSON.stringify(jsonUsuario)}.
+
+Output MUST be a highly realistic, unedited-looking photograph preserving the exact original body structure.`;
+        
         const responseXAI = await fetch("https://api.x.ai/v1/images/edits", {
             method: "POST",
             headers: {
