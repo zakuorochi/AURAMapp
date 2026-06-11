@@ -720,7 +720,7 @@
         }
 
         // --- FASE 3: FUSIÓN DE ALTA PRECISIÓN GUIADA POR EL DOBLE JSON ---
-        async function iniciarFusionTryOn() {
+      async function iniciarFusionTryOn() {
             irA('screen-loading');
             document.getElementById('loading-text').innerText = "EJECUTANDO COSTURA IA";
             document.getElementById('loading-subtext').innerText = "Amalgama fotorrealista basada en matrices geométricas...";
@@ -740,8 +740,9 @@
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detalle || "Fallo en el servidor de composición.");
 
-                if (data.success && data.imagenFinal) {
-                    const imageWithWatermark = await aplicarMarcaDeAgua("data:image/png;base64," + data.imagenFinal);
+                // CORRECCIÓN AQUÍ: Ahora busca "data.resultado" y lo pasa directo a la marca de agua
+                if (data.success && data.resultado) {
+                    const imageWithWatermark = await aplicarMarcaDeAgua(data.resultado);
                     document.getElementById('final-fusion-preview').src = imageWithWatermark;
                     irA('screen-fusion-result');
                     inicializarControladorZoom();
