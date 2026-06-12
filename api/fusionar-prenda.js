@@ -29,20 +29,25 @@ export default async function handler(req, res) {
 
         // 3. Preparar el prompt en inglés técnico para máxima precisión en la costura
        // 3. Prompt estricto Anti-Alucinaciones y control de pose
-        const promptCostura = `TASK: Expert Virtual Try-On. You must realistically dress the person in <IMAGE_1> using ONLY the exact garment from <IMAGE_0>.
+       // 3. Prompt Híbrido: Control estricto de pose + Conversión 2D a 3D
+        // 3. Prompt Universal: Bocetos, 2D, Ropa Real y Control estricto de pose
+        const promptCostura = `TASK: Expert Virtual Try-On and Concept-to-Reality Rendering. 
+You must realistically dress the person in <IMAGE_1> using the garment design from <IMAGE_0>.
+
+ADAPTIVE RENDERING RULES:
+- Analyze the garment in <IMAGE_0>: IF it is a sketch, drawing, 2D anime illustration, or flat concept design, you MUST "bring it to life". Render it as a photorealistic, physical fabric garment. Give it realistic 3D volume, natural drape, and accurate physical textures (e.g., cotton, leather, denim) based on the visual design.
+- IF it is already a real photograph of a garment, preserve its original texture and structure.
+- Adapt the shading, highlights, and physical fit of the fabric to perfectly wrap around the 3D contours of the user's body.
+- Match the ambient lighting and shadows of the user's environment in <IMAGE_1>.
 
 STRICT ANATOMY AND POSE RULES:
 1. KEEP the exact original pose of the person in <IMAGE_1>.
 2. DO NOT add objects. The person MUST NOT be holding a phone or camera.
 3. DO NOT generate extra limbs, hands, or arms. Keep the original hands exactly where they are.
-4. DO NOT alter the user's face, facial hair, skin tone, or the original background environment.
+4. DO NOT alter the user's face, skin tone, or the background.
 
-FITTING INSTRUCTIONS:
-- Extract the clothing design, texture, and color from <IMAGE_0>.
-- Wrap and tailor it naturally over the user's torso in <IMAGE_1>.
-- Reference these anatomical coordinates ONLY to understand the body scale and position, do not print them: ${JSON.stringify(jsonUsuario)}.
-
-Output MUST be a highly realistic, unedited-looking photograph preserving the exact original body structure.`;
+Reference these anatomical coordinates ONLY to understand the body scale: ${JSON.stringify(jsonUsuario)}.
+Output MUST be a highly realistic, unedited-looking photograph.`;
         
         const responseXAI = await fetch("https://api.x.ai/v1/images/edits", {
             method: "POST",
