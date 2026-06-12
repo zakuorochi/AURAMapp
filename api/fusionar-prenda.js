@@ -27,29 +27,33 @@ export default async function handler(req, res) {
             throw new Error("Faltan las imágenes base64 en la petición.");
         }
 
-        // 3. Preparar el prompt en inglés técnico para máxima precisión en la costura
-       // 3. Prompt estricto Anti-Alucinaciones y control de pose
-       // 3. Prompt Híbrido: Control estricto de pose + Conversión 2D a 3D
-        // 3. Prompt Universal: Bocetos, 2D, Ropa Real y Control estricto de pose
-       // 4. Prompt Definitivo: Ropa Suave + Armaduras/Cosplay y Materiales Rígidos
+      // 5. Prompt Ultra-Realista: Preservación Exacta, Materiales y Efecto Bokeh (Fondo Desenfoque)
         const promptCostura = `TASK: Expert Virtual Try-On and Concept-to-Reality Rendering. 
-You must realistically equip or dress the person in <IMAGE_1> using the design from <IMAGE_0>.
+You must realistically equip or dress the person in <IMAGE_1> using the EXACT design from <IMAGE_0>.
+
+STRICT DESIGN PRESERVATION (ZERO HALLUCINATION):
+- You MUST perfectly replicate the specific identity, colors, patterns, decals, and intricate details of the item in <IMAGE_0>. 
+- DO NOT invent or alter the original design. It must be 100% recognizable as the exact same garment or armor.
 
 ADAPTIVE MATERIAL & RENDERING RULES:
-- Analyze the item in <IMAGE_0> and determine its physical materials: 
-  * IF it is SOFT FABRIC (standard clothing, flat lay, fabric sketches): Render as photorealistic physical fabric with 3D volume, natural drape, and dynamic wrinkles wrapping the contours of the body.
-  * IF it is a RIGID or HARD SURFACE (armor, metal plates, plastic, mech suits, complex cosplay gear): Preserve its structural integrity and hard reflections. DO NOT apply fabric wrinkles to metal/rigid parts. Articulate, scale, and attach the armor plates biomechanically to perfectly fit the user's 3D anatomy and perspective.
-  * IF it is a 2D anime illustration or sketch: Bring it to life translating colors into photorealistic real-world materials (e.g., steel, leather, carbon fiber, or cotton depending on the visual context).
-- Match the ambient lighting, shadows, and color grading of the user's environment in <IMAGE_1>.
+- Analyze the item in <IMAGE_0>: 
+  * SOFT FABRIC: Render as physical fabric with 3D volume, natural drape, and wrinkles wrapping the body.
+  * RIGID/HARD SURFACE (armor, cosplay): Preserve its structural integrity. Articulate and attach the plates biomechanically to fit the user's 3D anatomy without altering the original design.
+  * 2D SKETCH/ANIME: Translate colors into photorealistic physical materials (cotton, metal, leather) preserving the exact original shapes.
+
+PHOTOGRAPHY & "WOW" FACTOR:
+- Apply a professional cinematic portrait photography style.
+- The user and the garment MUST be in ultra-sharp 8k focus.
+- Apply a realistic depth of field (Bokeh effect / background blur) to the background to make the user and the garment visually pop. 
 
 STRICT ANATOMY AND POSE RULES:
 1. KEEP the exact original pose of the person in <IMAGE_1>.
 2. DO NOT add objects. The person MUST NOT be holding a phone or camera.
 3. DO NOT generate extra limbs, hands, or arms. Keep the original hands exactly where they are.
-4. DO NOT alter the user's face, skin tone, or the background.
+4. DO NOT alter the user's face or skin tone.
 
-Reference these anatomical coordinates ONLY to understand the body scale: ${JSON.stringify(jsonUsuario)}.
-Output MUST be a highly realistic, unedited-looking photograph.`;
+Reference these anatomical coordinates ONLY to understand body scale: ${JSON.stringify(jsonUsuario)}.
+Output MUST be a highly realistic professional photograph.`;
         
         const responseXAI = await fetch("https://api.x.ai/v1/images/edits", {
             method: "POST",
