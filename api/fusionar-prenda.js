@@ -29,32 +29,33 @@ export default async function handler(req, res) {
 
       // 5. Prompt Ultra-Realista: Preservación Exacta, Materiales y Efecto Bokeh (Fondo Desenfoque)
       // 6. Prompt de Precisión: Bloqueo Facial, Bloqueo de Color y Efecto Bokeh
+     // 7. Prompt Definitivo: Bloqueo de Pose Cruzada, Identidad, Color y Bokeh
         const promptCostura = `TASK: Expert Virtual Try-On and Concept-to-Reality Rendering. 
 You must realistically equip or dress the person in <IMAGE_1> using the EXACT design from <IMAGE_0>.
 
+STRICT POSE & ANATOMY LOCK (CRITICAL):
+- POSE OVERRIDE: You MUST perfectly KEEP the exact original pose, posture, and body angle of the person in <IMAGE_1>.
+- IGNORE THE POSE IN <IMAGE_0>: The image <IMAGE_0> is STRICTLY for extracting the garment's design, materials, and colors. DO NOT copy, blend, or adopt the orientation, shape, or posture of the clothing/model from <IMAGE_0>.
+- DO NOT add objects (phones, cameras). Keep original hands exactly where they are without adding extra limbs.
+
 FACIAL IDENTITY LOCK (CRITICAL):
 - The user's face, facial expression, hair, and skin tone MUST remain 100% IDENTICAL to <IMAGE_1>. 
-- DO NOT redraw, alter, or "beautify" the face. Zero facial modifications are allowed.
+- Zero facial modifications are allowed. DO NOT redraw or beautify the face.
 
 STRICT DESIGN & COLOR PRESERVATION (ZERO HALLUCINATION):
-- COLOR LOCK: You MUST extract and use the EXACT color palette from <IMAGE_0>. Do not change the colors of the armor or garment to match the room; maintain the original colors strictly.
-- REAL GARMENTS (1:1 FIDELITY): If <IMAGE_0> is a photograph of real clothing, you must perfectly replicate the exact fabric, stitching, logos, and proportions. It must look like the exact same physical item.
-- ARMOR & SKETCHES: Preserve the intricate details, decals, and original shapes without inventing new geometry.
+- COLOR LOCK: You MUST extract and use the EXACT color palette from <IMAGE_0>. Maintain original colors strictly.
+- REAL GARMENTS (1:1 FIDELITY): Perfectly replicate the exact fabric, stitching, logos, and proportions from <IMAGE_0>.
+- ARMOR & SKETCHES: Preserve the intricate details and original shapes without inventing new geometry.
 
 ADAPTIVE MATERIAL & RENDERING RULES:
-- SOFT FABRIC: Render as physical fabric with 3D volume, natural drape, and wrinkles wrapping the body.
-- RIGID/HARD SURFACE (armor, cosplay): Preserve its structural integrity. Articulate and attach the plates biomechanically to fit the user's 3D anatomy.
-- 2D SKETCH/ANIME: Translate into photorealistic physical materials preserving the exact original shapes and EXACT colors.
+- SOFT FABRIC: Render as physical fabric with 3D volume, natural drape, and wrinkles wrapping the user's specific pose in <IMAGE_1>.
+- RIGID/HARD SURFACE: Articulate and attach plates biomechanically to fit the user's 3D anatomy.
+- 2D SKETCH/ANIME: Translate into photorealistic physical materials preserving exact colors and shapes.
 
 PHOTOGRAPHY & "WOW" FACTOR:
 - Apply a professional cinematic portrait photography style.
 - The user and the garment MUST be in ultra-sharp 8k focus.
-- Apply a realistic depth of field (Bokeh effect / background blur) to the background to make the user and the garment visually pop. 
-
-STRICT ANATOMY AND POSE RULES:
-1. KEEP the exact original pose of the person in <IMAGE_1>.
-2. DO NOT add objects. The person MUST NOT be holding a phone or camera.
-3. DO NOT generate extra limbs, hands, or arms. Keep the original hands exactly where they are.
+- Apply a realistic depth of field (Bokeh effect / background blur) to the background to make the subject pop.
 
 Reference these anatomical coordinates ONLY to understand body scale: ${JSON.stringify(jsonUsuario)}.
 Output MUST be a highly realistic professional photograph.`;
