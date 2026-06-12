@@ -31,14 +31,16 @@ export default async function handler(req, res) {
        // 3. Prompt estricto Anti-Alucinaciones y control de pose
        // 3. Prompt Híbrido: Control estricto de pose + Conversión 2D a 3D
         // 3. Prompt Universal: Bocetos, 2D, Ropa Real y Control estricto de pose
+       // 4. Prompt Definitivo: Ropa Suave + Armaduras/Cosplay y Materiales Rígidos
         const promptCostura = `TASK: Expert Virtual Try-On and Concept-to-Reality Rendering. 
-You must realistically dress the person in <IMAGE_1> using the garment design from <IMAGE_0>.
+You must realistically equip or dress the person in <IMAGE_1> using the design from <IMAGE_0>.
 
-ADAPTIVE RENDERING RULES:
-- Analyze the garment in <IMAGE_0>: IF it is a sketch, drawing, 2D anime illustration, or flat concept design, you MUST "bring it to life". Render it as a photorealistic, physical fabric garment. Give it realistic 3D volume, natural drape, and accurate physical textures (e.g., cotton, leather, denim) based on the visual design.
-- IF it is already a real photograph of a garment, preserve its original texture and structure.
-- Adapt the shading, highlights, and physical fit of the fabric to perfectly wrap around the 3D contours of the user's body.
-- Match the ambient lighting and shadows of the user's environment in <IMAGE_1>.
+ADAPTIVE MATERIAL & RENDERING RULES:
+- Analyze the item in <IMAGE_0> and determine its physical materials: 
+  * IF it is SOFT FABRIC (standard clothing, flat lay, fabric sketches): Render as photorealistic physical fabric with 3D volume, natural drape, and dynamic wrinkles wrapping the contours of the body.
+  * IF it is a RIGID or HARD SURFACE (armor, metal plates, plastic, mech suits, complex cosplay gear): Preserve its structural integrity and hard reflections. DO NOT apply fabric wrinkles to metal/rigid parts. Articulate, scale, and attach the armor plates biomechanically to perfectly fit the user's 3D anatomy and perspective.
+  * IF it is a 2D anime illustration or sketch: Bring it to life translating colors into photorealistic real-world materials (e.g., steel, leather, carbon fiber, or cotton depending on the visual context).
+- Match the ambient lighting, shadows, and color grading of the user's environment in <IMAGE_1>.
 
 STRICT ANATOMY AND POSE RULES:
 1. KEEP the exact original pose of the person in <IMAGE_1>.
