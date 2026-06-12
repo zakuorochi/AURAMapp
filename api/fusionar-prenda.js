@@ -28,18 +28,23 @@ export default async function handler(req, res) {
         }
 
       // 5. Prompt Ultra-Realista: Preservación Exacta, Materiales y Efecto Bokeh (Fondo Desenfoque)
+      // 6. Prompt de Precisión: Bloqueo Facial, Bloqueo de Color y Efecto Bokeh
         const promptCostura = `TASK: Expert Virtual Try-On and Concept-to-Reality Rendering. 
 You must realistically equip or dress the person in <IMAGE_1> using the EXACT design from <IMAGE_0>.
 
-STRICT DESIGN PRESERVATION (ZERO HALLUCINATION):
-- You MUST perfectly replicate the specific identity, colors, patterns, decals, and intricate details of the item in <IMAGE_0>. 
-- DO NOT invent or alter the original design. It must be 100% recognizable as the exact same garment or armor.
+FACIAL IDENTITY LOCK (CRITICAL):
+- The user's face, facial expression, hair, and skin tone MUST remain 100% IDENTICAL to <IMAGE_1>. 
+- DO NOT redraw, alter, or "beautify" the face. Zero facial modifications are allowed.
+
+STRICT DESIGN & COLOR PRESERVATION (ZERO HALLUCINATION):
+- COLOR LOCK: You MUST extract and use the EXACT color palette from <IMAGE_0>. Do not change the colors of the armor or garment to match the room; maintain the original colors strictly.
+- REAL GARMENTS (1:1 FIDELITY): If <IMAGE_0> is a photograph of real clothing, you must perfectly replicate the exact fabric, stitching, logos, and proportions. It must look like the exact same physical item.
+- ARMOR & SKETCHES: Preserve the intricate details, decals, and original shapes without inventing new geometry.
 
 ADAPTIVE MATERIAL & RENDERING RULES:
-- Analyze the item in <IMAGE_0>: 
-  * SOFT FABRIC: Render as physical fabric with 3D volume, natural drape, and wrinkles wrapping the body.
-  * RIGID/HARD SURFACE (armor, cosplay): Preserve its structural integrity. Articulate and attach the plates biomechanically to fit the user's 3D anatomy without altering the original design.
-  * 2D SKETCH/ANIME: Translate colors into photorealistic physical materials (cotton, metal, leather) preserving the exact original shapes.
+- SOFT FABRIC: Render as physical fabric with 3D volume, natural drape, and wrinkles wrapping the body.
+- RIGID/HARD SURFACE (armor, cosplay): Preserve its structural integrity. Articulate and attach the plates biomechanically to fit the user's 3D anatomy.
+- 2D SKETCH/ANIME: Translate into photorealistic physical materials preserving the exact original shapes and EXACT colors.
 
 PHOTOGRAPHY & "WOW" FACTOR:
 - Apply a professional cinematic portrait photography style.
@@ -50,7 +55,6 @@ STRICT ANATOMY AND POSE RULES:
 1. KEEP the exact original pose of the person in <IMAGE_1>.
 2. DO NOT add objects. The person MUST NOT be holding a phone or camera.
 3. DO NOT generate extra limbs, hands, or arms. Keep the original hands exactly where they are.
-4. DO NOT alter the user's face or skin tone.
 
 Reference these anatomical coordinates ONLY to understand body scale: ${JSON.stringify(jsonUsuario)}.
 Output MUST be a highly realistic professional photograph.`;
