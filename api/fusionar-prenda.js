@@ -30,32 +30,33 @@ export default async function handler(req, res) {
       // 5. Prompt Ultra-Realista: Preservación Exacta, Materiales y Efecto Bokeh (Fondo Desenfoque)
       // 6. Prompt de Precisión: Bloqueo Facial, Bloqueo de Color y Efecto Bokeh
      // 7. Prompt Definitivo: Bloqueo de Pose Cruzada, Identidad, Color y Bokeh
-        const promptCostura = `TASK: Expert Virtual Try-On and Concept-to-Reality Rendering. 
-You must realistically equip or dress the person in <IMAGE_1> using the EXACT design from <IMAGE_0>.
+       const promptCostura = `TASK: Expert Virtual Try-On and Concept-to-Reality Rendering. 
+You must realistically equip or dress the person in the target image (referred to as the user) using the EXACT design from the garment source.
 
-STRICT POSE & ANATOMY LOCK (CRITICAL):
-- POSE OVERRIDE: You MUST perfectly KEEP the exact original pose, posture, and body angle of the person in <IMAGE_1>.
-- IGNORE THE POSE IN <IMAGE_0>: The image <IMAGE_0> is STRICTLY for extracting the garment's design, materials, and colors. DO NOT copy, blend, or adopt the orientation, shape, or posture of the clothing/model from <IMAGE_0>.
-- DO NOT add objects (phones, cameras). Keep original hands exactly where they are without adding extra limbs.
+STRICT SCENARIO & ANATOMY LOCK (CRITICAL):
+- ENVIRONMENT LOCK: The background, lighting, and interior environment of the user's photo MUST remain 100% UNCHANGED. Do not redraw, blur, or alter the scene.
+- POSE OVERRIDE: You MUST perfectly KEEP the exact original pose, posture, and body angle of the user.
+- DO NOT adopt the orientation or shape of the clothing/model from the garment source. Use the garment source STRICTLY to extract fabric, textures, and colors.
+- DO NOT add objects. Keep original hands exactly where they are. Do not duplicate limbs.
 
-FACIAL IDENTITY LOCK (CRITICAL):
-- The user's face, facial expression, hair, and skin tone MUST remain 100% IDENTICAL to <IMAGE_1>. 
-- Zero facial modifications are allowed. DO NOT redraw or beautify the face.
+FACIAL IDENTITY LOCK (ZERO HALLUCINATION):
+- The user's face, facial expression, hair, and skin tone MUST remain 100% IDENTICAL to the source. 
+- Zero facial modifications are allowed. DO NOT redraw, smooth, or beautify the face.
 
-STRICT DESIGN & COLOR PRESERVATION (ZERO HALLUCINATION):
-- COLOR LOCK: You MUST extract and use the EXACT color palette from <IMAGE_0>. Maintain original colors strictly.
-- REAL GARMENTS (1:1 FIDELITY): Perfectly replicate the exact fabric, stitching, logos, and proportions from <IMAGE_0>.
-- ARMOR & SKETCHES: Preserve the intricate details and original shapes without inventing new geometry.
+GARMENT STATE & STYLE FIDELITY (CRITICAL):
+- You MUST precisely respect the physical state and styling of the garment.
+- If the garment source shows a piece partially or fully UNZIPPED or UNBUTTONED, it must remain UNZIPPED or UNBUTTONED on the user. Do not close open garments.
+- Maintain original colors strictly. Perfectly replicate the exact fabric, stitching, logos, and proportions from the garment source.
 
 ADAPTIVE MATERIAL & RENDERING RULES:
-- SOFT FABRIC: Render as physical fabric with 3D volume, natural drape, and wrinkles wrapping the user's specific pose in <IMAGE_1>.
+- SOFT FABRIC: Render as physical fabric with 3D volume, natural drape, and wrinkles wrapping the user's specific pose.
 - RIGID/HARD SURFACE: Articulate and attach plates biomechanically to fit the user's 3D anatomy.
 - 2D SKETCH/ANIME: Translate into photorealistic physical materials preserving exact colors and shapes.
 
-PHOTOGRAPHY & "WOW" FACTOR:
+PHOTOGRAPHY & CINEMATIC QUALITY:
 - Apply a professional cinematic portrait photography style.
 - The user and the garment MUST be in ultra-sharp 8k focus.
-- Apply a realistic depth of field (Bokeh effect / background blur) to the background to make the subject pop.
+- Apply a realistic depth of field (Bokeh effect) to the background to make the subject visually pop.
 
 Reference these anatomical coordinates ONLY to understand body scale: ${JSON.stringify(jsonUsuario)}.
 Output MUST be a highly realistic professional photograph.`;
