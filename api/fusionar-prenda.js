@@ -30,36 +30,26 @@ export default async function handler(req, res) {
       // 5. Prompt Ultra-Realista: Preservación Exacta, Materiales y Efecto Bokeh (Fondo Desenfoque)
       // 6. Prompt de Precisión: Bloqueo Facial, Bloqueo de Color y Efecto Bokeh
      // 7. Prompt Definitivo: Bloqueo de Pose Cruzada, Identidad, Color y Bokeh
-       const promptCostura = `TASK: Expert Virtual Try-On and Concept-to-Reality Rendering. 
-You must realistically equip or dress the person in the target image (referred to as the user) using the EXACT design from the garment source.
+       const promptCostura = `TASK: High-Fidelity Virtual Try-On and Material Transfer.
+You must render the target garment onto the user's body with perfect anatomical integration.
 
-STRICT SCENARIO & ANATOMY LOCK (CRITICAL):
-- ENVIRONMENT LOCK: The background, lighting, and interior environment of the user's photo MUST remain 100% UNCHANGED. Do not redraw, blur, or alter the scene.
-- POSE OVERRIDE: You MUST perfectly KEEP the exact original pose, posture, and body angle of the user.
-- DO NOT adopt the orientation or shape of the clothing/model from the garment source. Use the garment source STRICTLY to extract fabric, textures, and colors.
-- DO NOT add objects. Keep original hands exactly where they are. Do not duplicate limbs.
+STRICT ANATOMY & ENVIRONMENT LOCK (CRITICAL):
+- PHOTOREALISTIC PRESERVATION: You are strictly forbidden from modifying the user's background, environment, lighting, or surrounding scene. The background must remain 100% IDENTICAL to the source photo.
+- FACIAL & BODY LOCK: The user's face, hair, skin tone, hands, and body posture must be preserved with 100% pixel-perfect fidelity. DO NOT perform facial smoothing, beautification, or retouching. 
+- EXCLUSIVITY: Modify ONLY the pixels corresponding to the user's torso/body where the garment is applied. All other pixels (face, hair, background, environment) must remain original and untouched.
 
-FACIAL IDENTITY LOCK (ZERO HALLUCINATION):
-- The user's face, facial expression, hair, and skin tone MUST remain 100% IDENTICAL to the source. 
-- Zero facial modifications are allowed. DO NOT redraw, smooth, or beautify the face.
+COLORIMETRY & MATERIAL FIDELITY (ZERO HALLUCINATION):
+- COLOR ACCURACY: You must NOT hallucinate or alter the garment's colors. Extract the exact RGB values, patterns, logos, and textures from the garment source and replicate them exactly.
+- PHYSICAL STATE: If the original garment is unzipped, open, or wrinkled, render it with the EXACT same physical state on the user. Do not "correct" the design.
+- MAPPING: Map the texture precisely to the user's pose. Ensure stitches, logos, and fabric grains align naturally with the user's body curves.
 
-GARMENT STATE & STYLE FIDELITY (CRITICAL):
-- You MUST precisely respect the physical state and styling of the garment.
-- If the garment source shows a piece partially or fully UNZIPPED or UNBUTTONED, it must remain UNZIPPED or UNBUTTONED on the user. Do not close open garments.
-- Maintain original colors strictly. Perfectly replicate the exact fabric, stitching, logos, and proportions from the garment source.
+RENDER QUALITY RULES:
+- 3D DRAPE: Apply natural 3D volume, realistic shadows, and cloth physics (drapes/wrinkles) to adapt the fabric to the user's specific pose.
+- DEPTH & FOCUS: Apply a cinematic depth of field. Keep the user in ultra-sharp focus while maintaining the original background.
+- NO HALLUCINATIONS: Do not introduce new objects, extra limbs, or structural changes to the background.
 
-ADAPTIVE MATERIAL & RENDERING RULES:
-- SOFT FABRIC: Render as physical fabric with 3D volume, natural drape, and wrinkles wrapping the user's specific pose.
-- RIGID/HARD SURFACE: Articulate and attach plates biomechanically to fit the user's 3D anatomy.
-- 2D SKETCH/ANIME: Translate into photorealistic physical materials preserving exact colors and shapes.
-
-PHOTOGRAPHY & CINEMATIC QUALITY:
-- Apply a professional cinematic portrait photography style.
-- The user and the garment MUST be in ultra-sharp 8k focus.
-- Apply a realistic depth of field (Bokeh effect) to the background to make the subject visually pop.
-
-Reference these anatomical coordinates ONLY to understand body scale: ${JSON.stringify(jsonUsuario)}.
-Output MUST be a highly realistic professional photograph.`;
+Reference anatomical coordinates: ${JSON.stringify(jsonUsuario)}.
+Your goal is a seamless, professional photographic result where the garment looks physically present on the user without altering the original photography's essence.`;
         
         const responseXAI = await fetch("https://api.x.ai/v1/images/edits", {
             method: "POST",
