@@ -63,14 +63,7 @@ export default async function handler(req, res) {
         // PREPARACIÓN DEL PROMPT PARA PRUNA AI (P-Image-Edit)
         // ========================================================================
        // Este sería tu nuevo prompt para la API de Pruna
-const promptCostura = `Professional Virtual Try-On. 
-Source garment (Input 2) mapped onto target body (Input 1). 
-- ANATOMY LOCK: Keep user face, skin, hair, and background 100% original. Zero facial retouching.
-- GARMENT FIDELITY: Maintain the EXACT state of the garment (e.g., keep open jackets open, do not zip).
-- PHYSICS: Realistic 3D drape, fabric volume, and natural shadows wrapping the body geometry.
-- ALIGNMENT: Align fabric patterns, logos, and seams to the body following these reference anchors: ${JSON.stringify(jsonUsuario)}.
-- STYLE: Hyper-detailed photorealistic fabric texture, seamless integration at the neck and wrists.
-- NO HALLUCINATIONS: Do not alter the original background, do not change user pose, do not change garment color or design.`;
+const promptCostura = "Virtual try-on: precisely overlay the garment from the reference image onto the person's torso. The garment must adapt its perspective, shadows, and fabric folds to match the person's pose. Preserve the person's identity, face, and original background. High-fidelity textile fusion, zero distortion."
 
         // Formateo seguro de imágenes (Pruna acepta DataURI o Base64 puro, estandarizamos a DataURI)
         const formatImage = (img) => img.startsWith('data:') ? img : `data:image/jpeg;base64,${img}`;
