@@ -17,7 +17,7 @@ export default async function handler(req, res) {
         }
 
         // El prompt ahora es más sencillo porque el modelo ya entiende que es un "Try-On"
-        const promptCostura = "High-fidelity virtual try-on, photorealistic fabric, seamless garment integration on body, preserve identity and background.";
+        const promptCostura = "Full-body virtual try-on: seamlessly composite the entire outfit from the reference image onto the person's body, covering torso, arms, and legs. Maintain the original pose, physical body proportions, and height of the person. STRICT PRESERVATION: keep the original background, environment, skin, face, and hair 100% untouched. The garment must dynamically adapt its perspective, folds, and shadows to the subject's posture. High-fidelity textile fusion, zero distortion, photorealistic rendering.";
 
         const formatImage = (img) => img.startsWith('data:') ? img : `data:image/jpeg;base64,${img}`;
 
