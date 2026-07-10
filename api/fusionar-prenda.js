@@ -1,73 +1,34 @@
 import crypto from 'crypto';
-import sharp from 'sharp';
 
 export default async function handler(req, res) {
-    // 1. Configurar cabeceras CORS
+    // Configuración CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: "Método no permitido. Usa POST." });
-    }
+    if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method !== 'POST') return res.status(405).json({ error: "Método no permitido." });
 
     try {
-        // BLINDAJE: Transformar payload a objeto si llega como string
-        let dataCuerpo = req.body;
-        if (typeof dataCuerpo === 'string') {
-            dataCuerpo = JSON.parse(dataCuerpo);
-        }
+        let dataCuerpo = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        const { image, garmentBase64 } = dataCuerpo;
 
-        const { image, garmentBase64, jsonPrenda, jsonUsuario } = dataCuerpo;
-
-        // Validación de seguridad
         if (!garmentBase64 || !image) {
-            throw new Error("Faltan las imágenes base64 en la petición.");
+            throw new Error("Faltan las imágenes base64.");
         }
 
-        // ========================================================================
-        // PASO CLAVE: CONVERSIÓN DE JSON A MÁSCARA FÍSICA CON SHARP
-        // ========================================================================
-        const ancho = 1024;
-        const alto = 1024;
-        
-        // IMPORTANTE: Reemplaza "hombroIzq.x", etc., por las propiedades exactas de tu jsonUsuario
-        const svgMask = `
-            <svg width="${ancho}" height="${alto}">
-                <rect width="100%" height="100%" fill="#000000" />
-                
-                <defs>
-                    <filter id="desenfoque">
-                        <feGaussianBlur stdDeviation="3" />
-                    </filter>
-                </defs>
-                <polygon points="
-                    ${jsonUsuario.hombroIzq?.x || 300},${jsonUsuario.hombroIzq?.y || 200} 
-                    ${jsonUsuario.hombroDer?.x || 700},${jsonUsuario.hombroDer?.y || 200} 
-                    ${jsonUsuario.cinturaDer?.x || 650},${jsonUsuario.cinturaDer?.y || 800} 
-                    ${jsonUsuario.cinturaIzq?.x || 350},${jsonUsuario.cinturaIzq?.y || 800}
-                " fill="#FFFFFF" filter="url(#desenfoque)"/>
-            </svg>
-        `;
+        // PROMPT ESTRATÉGICO: 
+        // Aquí le damos el control total al modelo para que use la imagen 2 como referencia
+        // y la aplique sobre la imagen 1, protegiendo el entorno.
+        const promptCostura = `Virtual try-on: Compositing the garment from the reference image onto the person in the target image. 
+        CRITICAL RULES: 
+        1. Keep the person's face, hair, skin, and full body pose EXACTLY as in the original photo. 
+        2. Keep the original background, environment, lighting, and camera angle 100% untouched. 
+        3. Replace ONLY the existing clothing with the reference garment, ensuring perfect texture mapping, natural fabric folds, and shadows matching the original scene. 
+        4. High-fidelity rendering.`;
 
-        // Convertir el SVG a un buffer PNG y luego a DataURI
-        const mascaraBuffer = await sharp(Buffer.from(svgMask)).png().toBuffer();
-        const mascaraDataURI = `data:image/png;base64,${mascaraBuffer.toString('base64')}`;
-
-
-        // ========================================================================
-        // PREPARACIÓN DEL PROMPT PARA PRUNA AI (P-Image-Edit)
-        // ========================================================================
-        const promptCostura = `high-quality photorealistic fabric texture, identical garment design, natural 3D volume, realistic drape and wrinkles matching the user's pose, shadows matching reference lighting, professional fashion photography, seamless integration on torso, hyper-detailed textiles.`;
-
-        // Formateo seguro de imágenes (Pruna acepta DataURI o Base64 puro, estandarizamos a DataURI)
         const formatImage = (img) => img.startsWith('data:') ? img : `data:image/jpeg;base64,${img}`;
 
-        // Estructura estricta exigida por Runware API
         const runwarePayload = [
             {
                 "taskType": "authentication",
@@ -76,56 +37,39 @@ export default async function handler(req, res) {
             {
                 "taskType": "imageInference",
                 "taskUUID": crypto.randomUUID(),
-                "model": "prunaai:2@1",
+                "model": "alibaba:qwen-image@2512",
                 "positivePrompt": promptCostura,
-                "width": ancho,
-                "height": alto,
-                "outputType": "dataURI", // Para devolver Base64 directo a tu frontend
+                "negativePrompt": "background change, facial distortion, skin retouching, body shape change, different pose, extra limbs, low quality, cartoon, watermark",
+                "width": 1024,
+                "height": 1024,
+                "strength": 0.75, // Ajusta esto: 0.7-0.8 es ideal para fusionar sin borrar fondo
+                "outputType": "dataURI",
                 "outputFormat": "JPG",
                 "inputs": {
-                    "referenceImages": [
-                        formatImage(image),          // [0] Semilla: Foto del usuario
-                        formatImage(garmentBase64),  // [1] Referencia: La prenda
-                        mascaraDataURI               // [2] Restricción: La máscara de Sharp
-                    ]
+                    "seedImage": formatImage(image) // La foto del usuario
+                    // Qwen usa seedImage y maskImage. Si no pasas máscara, 
+                    // la IA usará el prompt para decidir qué cambiar.
                 }
             }
         ];
 
-        // ========================================================================
-        // LLAMADA AL MOTOR DE INFERENCIA DE RUNWARE
-        // ========================================================================
         const responseRunware = await fetch("https://api.runware.ai/v1", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(runwarePayload)
         });
 
         const dataRunware = await responseRunware.json();
 
-        // Manejo de errores de la API de Runware
-        if (dataRunware.errors && dataRunware.errors.length > 0) {
-            console.error("Detalle error Pruna AI:", dataRunware.errors);
-            throw new Error(dataRunware.errors[0].message || "Error en la inferencia de Pruna AI.");
-        }
+        if (dataRunware.errors?.length > 0) throw new Error(dataRunware.errors[0].message);
 
-        // Extraer la imagen procesada
-        // Runware devuelve la dataURI completa gracias al outputType que configuramos
-        const imagenFusionadaDataURI = dataRunware.data[0].imageURL;
-
-        // Retornar al index.html de AURAM
         return res.status(200).json({ 
             success: true, 
-            resultado: imagenFusionadaDataURI 
+            resultado: dataRunware.data[0].imageURL 
         });
 
     } catch (err) {
-        console.error("[ERROR EN BACKEND AURAM-PRUNA]:", err.message);
-        return res.status(500).json({ 
-            error: true, 
-            detalle: err.message 
-        });
+        console.error("[ERROR QWEN-TRYON]:", err.message);
+        return res.status(500).json({ error: true, detalle: err.message });
     }
 }
