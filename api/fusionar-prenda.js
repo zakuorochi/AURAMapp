@@ -36,23 +36,18 @@ export default async function handler(req, res) {
         const alto = 1024;
         
         // IMPORTANTE: Reemplaza "hombroIzq.x", etc., por las propiedades exactas de tu jsonUsuario
-        const svgMask = `
-            <svg width="${ancho}" height="${alto}">
-                <rect width="100%" height="100%" fill="#000000" />
-                
-                <defs>
-                    <filter id="desenfoque">
-                        <feGaussianBlur stdDeviation="3" />
-                    </filter>
-                </defs>
-                <polygon points="
-                    ${jsonUsuario.hombroIzq?.x || 300},${jsonUsuario.hombroIzq?.y || 200} 
-                    ${jsonUsuario.hombroDer?.x || 700},${jsonUsuario.hombroDer?.y || 200} 
-                    ${jsonUsuario.cinturaDer?.x || 650},${jsonUsuario.cinturaDer?.y || 800} 
-                    ${jsonUsuario.cinturaIzq?.x || 350},${jsonUsuario.cinturaIzq?.y || 800}
-                " fill="#FFFFFF" filter="url(#desenfoque)"/>
-            </svg>
-        `;
+       const svgMask = `
+    <svg width="${ancho}" height="${alto}">
+        <rect width="100%" height="100%" fill="#000000" />
+        
+        <polygon points="
+            ${jsonUsuario.hombroIzq?.x},${jsonUsuario.hombroIzq?.y} 
+            ${jsonUsuario.hombroDer?.x},${jsonUsuario.hombroDer?.y} 
+            ${jsonUsuario.rodillaDer?.x || 700},${jsonUsuario.rodillaDer?.y || 800} 
+            ${jsonUsuario.rodillaIzq?.x || 300},${jsonUsuario.rodillaIzq?.y || 800}
+        " fill="#FFFFFF" filter="url(#desenfoque)"/>
+    </svg>
+`;
 
         // Convertir el SVG a un buffer PNG y luego a DataURI
         const mascaraBuffer = await sharp(Buffer.from(svgMask)).png().toBuffer();
@@ -63,7 +58,7 @@ export default async function handler(req, res) {
         // PREPARACIÓN DEL PROMPT PARA PRUNA AI (P-Image-Edit)
         // ========================================================================
        // Este sería tu nuevo prompt para la API de Pruna
-const promptCostura = "Virtual try-on: precisely overlay the garment from the reference image onto the person's torso. The garment must adapt its perspective, shadows, and fabric folds to match the person's pose. Preserve the person's identity, face, and original background. High-fidelity textile fusion, zero distortion."
+const promptCostura = "Full-body virtual try-on: seamlessly composite the entire outfit from the reference image onto the person's body, covering torso, arms, and legs. Maintain the original pose, physical body proportions, and height of the person. STRICT PRESERVATION: keep the original background, environment, skin, face, and hair 100% untouched. The garment must dynamically adapt its perspective, folds, and shadows to the subject's posture. High-fidelity textile fusion, zero distortion, photorealistic rendering."
 
         // Formateo seguro de imágenes (Pruna acepta DataURI o Base64 puro, estandarizamos a DataURI)
         const formatImage = (img) => img.startsWith('data:') ? img : `data:image/jpeg;base64,${img}`;
