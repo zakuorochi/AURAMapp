@@ -720,36 +720,64 @@
         }
 
         // --- FASE 3: FUSIÓN DE ALTA PRECISIÓN GUIADA POR EL DOBLE JSON ---
-      async function iniciarFusionTryOn() {
+   async function iniciarFusionTryOn() {
             irA('screen-loading');
             document.getElementById('loading-text').innerText = "EJECUTANDO COSTURA IA";
-            document.getElementById('loading-subtext').innerText = "Amalgama fotorrealista basada en matrices geométricas...";
+            document.getElementById('loading-subtext').innerText = "Analizando capas y texturas fotorrealistas...";
 
             try {
+                // 1. Llamada al nuevo backend adaptado para múltiples capas
                 const res = await fetch('/api/fusionar-prenda', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         image: fotoUsuarioBase64,
-                        garmentBase64: stickerProcesadoBase64,
-                        jsonPrenda: mapaJsonPrenda,
-                        jsonUsuario: mapaJsonUsuario,
-                        codigo: "A001", genero: "unisex", assetsFolder: "assets"
+                        // CAMBIO CLAVE: Ahora se envía dentro de un arreglo [ ] llamado "garments"
+                        garments: [stickerProcesadoBase64], 
+                        codigo: "A001", 
+                        genero: "unisex", 
+                        assetsFolder: "assets"
                     })
                 });
 
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.detalle || "Fallo en el servidor de composición.");
+                
+                if (!res.ok) {
+                    throw new Error(data.detalle || "Fallo en el servidor de composición de Pruna.");
+                }
 
-                // CORRECCIÓN AQUÍ: Ahora busca "data.resultado" y lo pasa directo a la marca de agua
+                // 2. Procesamiento y Renderizado Seguro
                 if (data.success && data.resultado) {
-                    const imageWithWatermark = await aplicarMarcaDeAgua(data.resultado);
-                    document.getElementById('final-fusion-preview').src = imageWithWatermark;
-                    irA('screen-fusion-result');
-                    inicializarControladorZoom();
+                    try {
+                        const imageWithWatermark = await aplicarMarcaDeAgua(data.resultado);
+                        const previewElement = document.getElementById('final-fusion-preview');
+                        
+                        // BLINDAJE: Esperamos a que la imagen cargue físicamente en la memoria del navegador
+                        previewElement.onload = () => {
+                            irA('screen-fusion-result');
+                            inicializarControladorZoom();
+                        };
+                        
+                        previewElement.onerror = () => {
+                            throw new Error("El navegador no pudo procesar el formato de imagen devuelto.");
+                        };
+
+                        // Dispara la carga de la imagen
+                        previewElement.src = imageWithWatermark;
+
+                    } catch (wmErr) {
+                        console.error("Error en post-procesamiento de marca de agua:", wmErr);
+                        // FALLBACK: Si la marca de agua falla, muestra la imagen cruda de Pruna para no perder el resultado
+                        const previewFallback = document.getElementById('final-fusion-preview');
+                        previewFallback.src = data.resultado;
+                        irA('screen-fusion-result');
+                        inicializarControladorZoom();
+                    }
                 } else {
-                    throw new Error("La matriz generadora no retornó el render visual.");
+                    throw new Error("La IA de Pruna no retornó el render visual final.");
                 }
             } catch (err) {
+                console.error("[ERROR EN VESTIDOR]:", err);
                 irA('screen-tryon-setup');
                 showAlert("🚨 ERROR EN VESTIDOR:<br>" + err.message);
             }
