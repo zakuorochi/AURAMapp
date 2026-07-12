@@ -27,11 +27,10 @@ export default async function handler(req, res) {
             throw new Error("Faltan las imágenes base64 del usuario o de las prendas.");
         }
 
-        const promptCostura = `Virtual try-on: Convert the input flat design/sketch into a photorealistic garment. 
-- TRANSFORMATION: Apply hyper-realistic fabric textures, natural lighting, and shadows to the flat/anime-style design from the reference image.
-- LAYERING: Composite ALL garments from the reference set onto the person simultaneously. Do not limit the transformation to the outermost layer. 
-- HIERARCHY: Correctly layer the clothing: shirt as the base, tie/accessories as mid-layer, and jacket as the outer layer. Ensure all layers interact realistically with fabric folds and occlusion.
-- REALISM: Render as a single, cohesive photorealistic outfit with matching shadows and lighting across all layers.
+       const promptCostura = `Virtual try-on: Perform a full-set outfit composition. 
+- LAYERING: Composite ALL garments from the provided reference set onto the person simultaneously. Do not limit the transformation to the outermost layer. 
+- HIERARCHY: Correctly layer the clothing: linen trousers as base, white top as mid-layer, and botanical jacket as the outer layer. Ensure all layers interact realistically with fabric folds and occlusion.
+- REALISM: Render as a single, cohesive photorealistic outfit with matching shadows, lighting, and physics across all layers.
 - PRESERVATION: Keep the person's face, skin, hair, and background 100% untouched.`;
 
         const formatImage = (img) => img.startsWith('data:') ? img : `data:image/jpeg;base64,${img}`;
