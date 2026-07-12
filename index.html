@@ -727,18 +727,18 @@
 
             try {
                 // 1. Llamada al nuevo backend adaptado para múltiples capas
-                const res = await fetch('/api/fusionar-prenda', {
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        image: fotoUsuarioBase64,
-                        // CAMBIO CLAVE: Ahora se envía dentro de un arreglo [ ] llamado "garments"
-                        garments: [stickerProcesadoBase64], 
-                        codigo: "A001", 
-                        genero: "unisex", 
-                        assetsFolder: "assets"
-                    })
-                });
+          const res = await fetch('/api/fusionar-prenda', {
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        image: fotoUsuarioBase64,
+        // CAMBIO: Ahora enviamos 'garments' como array para ser compatibles con el backend
+        garments: [stickerProcesadoBase64], 
+        codigo: "A001", 
+        genero: "unisex", 
+        assetsFolder: "assets"
+    })
+});
 
                 const data = await res.json();
                 
