@@ -45,23 +45,22 @@ export default async function handler(req, res) {
             referenceImages.push({ "image": formatImage(prendaStr), "role": "garment" });
         });
 
-        const runwarePayload = [
-            {
-                "taskType": "authentication",
-                "apiKey": process.env.RUNWARE_API_KEY
-            },
-            {
-                "taskType": "imageInference",
-                "taskUUID": crypto.randomUUID(),
-                "model": "prunaai:p-image@try-on",
-                "positivePrompt": promptCostura,
-                "outputType": "dataURI",
-                "outputFormat": "JPG",
-                "inputs": {
-                    "referenceImages": referenceImages // Pasamos el array dinámico completo
-                }
-            }
-        ];
+   // ... dentro de tu handler
+const runwarePayload = [
+    { "taskType": "authentication", "apiKey": process.env.RUNWARE_API_KEY },
+    {
+        "taskType": "imageInference",
+        "taskUUID": crypto.randomUUID(),
+        "model": "prunaai:p-image@try-on",
+        "positivePrompt": promptCostura,
+        "inputs": {
+            "referenceImages": [
+                { "image": formatImage(image), "role": "person" },
+                { "image": formatImage(garmentBase64), "role": "garment" }
+            ]
+        }
+    }
+];
         
 const responseRunware = await fetch("https://api.runware.ai/v1", {
             method: "POST",
