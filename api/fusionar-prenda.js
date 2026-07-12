@@ -27,7 +27,7 @@ export default async function handler(req, res) {
             throw new Error("Faltan las imágenes base64 del usuario o de las prendas.");
         }
 
-       const promptCostura = "Photorealistic virtual try-on: composite the ALL CLOTHES set onto the person, maintaining perfect layer hierarchy, natural fabric physics, and realistic shadows while keeping the person's identity and original background 100% unchanged."
+      "Photorealistic virtual try-on: replace the entire clothing set worn by the person with the provided garment set. Treat all reference images as a single cohesive outfit; identify, layer, and composite each garment according to its visual category (outerwear, mid-layer, base-layer), ensuring perfect anatomical alignment, fabric drape, and realistic layering for the entire look."
 
         const formatImage = (img) => img.startsWith('data:') ? img : `data:image/jpeg;base64,${img}`;
 
