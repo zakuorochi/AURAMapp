@@ -19,9 +19,10 @@ export default async function handler(req, res) {
         // El prompt ahora es más sencillo porque el modelo ya entiende que es un "Try-On"
         const promptCostura = `Virtual try-on: Convert the input flat design/sketch into a photorealistic garment. 
 - TRANSFORMATION: Apply hyper-realistic fabric textures, natural lighting, and shadows to the flat/anime-style design from the reference image.
-- REALISM: Render the garment as a tangible, physical item with 3D volume, realistic drape, and realistic fabric grain. 
-- PRESERVATION: Maintain the user's identity, background, and pose. 
-- SEAMLESSNESS: Seamlessly composite the garment onto the body with professional fashion photography quality.`;
+- LAYERING: Composite ALL garments from the reference set onto the person simultaneously. Do not limit the transformation to the outermost layer. 
+- HIERARCHY: Correctly layer the clothing: shirt as the base, tie/accessories as mid-layer, and jacket as the outer layer. Ensure all layers interact realistically with fabric folds and occlusion.
+- REALISM: Render as a single, cohesive photorealistic outfit with matching shadows and lighting across all layers.
+- PRESERVATION: Keep the person's face, skin, hair, and background 100% untouched.`;
 
         const formatImage = (img) => img.startsWith('data:') ? img : `data:image/jpeg;base64,${img}`;
 
