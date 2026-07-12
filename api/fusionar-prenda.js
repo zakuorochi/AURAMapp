@@ -80,31 +80,30 @@ const responseRunware = await fetch("https://api.runware.ai/v1", {
         // ------------------------------------------------------------------------
         // BUSCADOR DINÁMICO DE IMÁGENES (A prueba de fallos)
         // ------------------------------------------------------------------------
-        let imagenFinal = null;
+   let imagenFinal = null;
         
         if (dataRunware.data && Array.isArray(dataRunware.data)) {
             for (const item of dataRunware.data) {
-                // Buscamos en todas las posibles llaves donde Runware podría haber escondido la imagen
-                if (item.imageURL) {
+                // AQUÍ ESTÁ LA MAGIA: Agregamos item.imageDataURI
+                if (item.imageDataURI) {
+                    imagenFinal = item.imageDataURI;
+                } else if (item.imageURL) {
                     imagenFinal = item.imageURL;
                 } else if (item.image) {
                     imagenFinal = item.image;
                 } else if (item.dataURI) {
                     imagenFinal = item.dataURI;
                 } else if (item.base64Data) {
-                    // Si la devuelve en base64 puro, la formateamos para el navegador
                     imagenFinal = "data:image/jpeg;base64," + item.base64Data; 
                 }
                 
-                if (imagenFinal) break; // Si ya encontramos la imagen, dejamos de buscar
+                if (imagenFinal) break; 
             }
         }
 
-        // TRAMPA DE DEBUGGING: Si sigue sin encontrarla, forzamos a que el error nos muestre 
-        // exactamente qué devolvió Runware en la pantalla de la app.
+        // TRAMPA DE DEBUGGING
         if (!imagenFinal) {
             const rawResponse = JSON.stringify(dataRunware.data);
-            // Cortamos el texto a 200 caracteres para que no desborde la alerta
             throw new Error("Formato desconocido de Runware. Respuesta cruda: " + rawResponse.substring(0, 200));
         }
 
