@@ -63,8 +63,8 @@ export default async function handler(req, res) {
                 }
             }
         ];
-
-        const responseRunware = await fetch("https://api.runware.ai/v1", {
+        
+const responseRunware = await fetch("https://api.runware.ai/v1", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(runwarePayload)
@@ -74,9 +74,17 @@ export default async function handler(req, res) {
 
         if (dataRunware.errors?.length > 0) throw new Error(dataRunware.errors[0].message);
 
+        // CORRECCIÓN CLAVE: Buscar la respuesta que contiene la imagen, no solo la primera posición
+        const tareaInferencia = dataRunware.data.find(tarea => tarea.taskType === "imageInference" || tarea.imageURL);
+
+        if (!tareaInferencia || !tareaInferencia.imageURL) {
+            throw new Error("Runware procesó la solicitud, pero no se encontró la imagen en la respuesta.");
+        }
+
+        // Retornar la imagen fusionada al frontend
         return res.status(200).json({ 
             success: true, 
-            resultado: dataRunware.data[0].imageURL 
+            resultado: tareaInferencia.imageURL 
         });
 
     } catch (err) {
