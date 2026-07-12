@@ -72,19 +72,46 @@ const responseRunware = await fetch("https://api.runware.ai/v1", {
 
         const dataRunware = await responseRunware.json();
 
-        if (dataRunware.errors?.length > 0) throw new Error(dataRunware.errors[0].message);
-
-        // CORRECCIÓN CLAVE: Buscar la respuesta que contiene la imagen, no solo la primera posición
-        const tareaInferencia = dataRunware.data.find(tarea => tarea.taskType === "imageInference" || tarea.imageURL);
-
-        if (!tareaInferencia || !tareaInferencia.imageURL) {
-            throw new Error("Runware procesó la solicitud, pero no se encontró la imagen en la respuesta.");
+        // Si la API de Runware detectó un error interno, lo lanzamos
+        if (dataRunware.errors && dataRunware.errors.length > 0) {
+            throw new Error("Runware API Error: " + dataRunware.errors[0].message);
         }
 
-        // Retornar la imagen fusionada al frontend
+        // ------------------------------------------------------------------------
+        // BUSCADOR DINÁMICO DE IMÁGENES (A prueba de fallos)
+        // ------------------------------------------------------------------------
+        let imagenFinal = null;
+        
+        if (dataRunware.data && Array.isArray(dataRunware.data)) {
+            for (const item of dataRunware.data) {
+                // Buscamos en todas las posibles llaves donde Runware podría haber escondido la imagen
+                if (item.imageURL) {
+                    imagenFinal = item.imageURL;
+                } else if (item.image) {
+                    imagenFinal = item.image;
+                } else if (item.dataURI) {
+                    imagenFinal = item.dataURI;
+                } else if (item.base64Data) {
+                    // Si la devuelve en base64 puro, la formateamos para el navegador
+                    imagenFinal = "data:image/jpeg;base64," + item.base64Data; 
+                }
+                
+                if (imagenFinal) break; // Si ya encontramos la imagen, dejamos de buscar
+            }
+        }
+
+        // TRAMPA DE DEBUGGING: Si sigue sin encontrarla, forzamos a que el error nos muestre 
+        // exactamente qué devolvió Runware en la pantalla de la app.
+        if (!imagenFinal) {
+            const rawResponse = JSON.stringify(dataRunware.data);
+            // Cortamos el texto a 200 caracteres para que no desborde la alerta
+            throw new Error("Formato desconocido de Runware. Respuesta cruda: " + rawResponse.substring(0, 200));
+        }
+
+        // Retornamos el éxito al frontend
         return res.status(200).json({ 
             success: true, 
-            resultado: tareaInferencia.imageURL 
+            resultado: imagenFinal 
         });
 
     } catch (err) {
