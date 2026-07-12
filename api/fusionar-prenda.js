@@ -51,11 +51,14 @@ const runwarePayload = [
         "taskType": "imageInference",
         "taskUUID": crypto.randomUUID(),
         "model": "prunaai:p-image@try-on",
-        "positivePrompt": promptCostura,
+        "positivePrompt": "Full-body virtual try-on: replace existing clothes with the provided outfit reference, maintain original background and body pose.",
         "outputType": "dataURI",
         "outputFormat": "JPG",
         "inputs": {
-            "referenceImages": referenceImages // <--- AQUÍ ESTABA EL ERROR, ESTABA HARDCODED
+            "referenceImages": [
+                { "image": formatImage(image), "role": "person" },
+                { "image": formatImage(garmentBase64), "role": "garment" }
+            ]
         }
     }
 ];
