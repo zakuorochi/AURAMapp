@@ -27,7 +27,7 @@ export default async function handler(req, res) {
             throw new Error("Faltan las imágenes base64 del usuario o de las prendas.");
         }
 
-       const promptCostura = "Photorealistic virtual try-on: composite the entire garment set onto the person, maintaining perfect layer hierarchy, natural fabric physics, and realistic shadows while keeping the person's identity and original background 100% unchanged."
+       const promptCostura = "Photorealistic virtual try-on: composite the ALL CLOTHES set onto the person, maintaining perfect layer hierarchy, natural fabric physics, and realistic shadows while keeping the person's identity and original background 100% unchanged."
 
         const formatImage = (img) => img.startsWith('data:') ? img : `data:image/jpeg;base64,${img}`;
 
