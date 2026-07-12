@@ -10,13 +10,23 @@ export default async function handler(req, res) {
 
     try {
         let dataCuerpo = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-        const { image, garmentBase64 } = dataCuerpo;
+        
+        // 1. Extraemos la imagen del usuario y buscamos la ropa (ya sea 1 o varias)
+        // Aceptamos 'garmentBase64' (string) para 1 prenda o 'garments' (array) para múltiples
+        const { image, garmentBase64, garments } = dataCuerpo;
 
-        if (!garmentBase64 || !image) {
-            throw new Error("Faltan las imágenes base64.");
+        // 2. Normalizamos la entrada de prendas a un Array para procesarlo dinámicamente
+        let listaPrendas = [];
+        if (garments && Array.isArray(garments) && garments.length > 0) {
+            listaPrendas = garments;
+        } else if (garmentBase64) {
+            listaPrendas = [garmentBase64];
         }
 
-        // El prompt ahora es más sencillo porque el modelo ya entiende que es un "Try-On"
+        if (listaPrendas.length === 0 || !image) {
+            throw new Error("Faltan las imágenes base64 del usuario o de las prendas.");
+        }
+
         const promptCostura = `Virtual try-on: Convert the input flat design/sketch into a photorealistic garment. 
 - TRANSFORMATION: Apply hyper-realistic fabric textures, natural lighting, and shadows to the flat/anime-style design from the reference image.
 - LAYERING: Composite ALL garments from the reference set onto the person simultaneously. Do not limit the transformation to the outermost layer. 
@@ -26,7 +36,16 @@ export default async function handler(req, res) {
 
         const formatImage = (img) => img.startsWith('data:') ? img : `data:image/jpeg;base64,${img}`;
 
-        // Estructura estricta para el modelo de TRY-ON de Pruna
+        // 3. Construimos el array de "referenceImages" dinámicamente
+        const referenceImages = [
+            { "image": formatImage(image), "role": "person" }
+        ];
+
+        // Iteramos sobre todas las prendas que llegaron y las añadimos como "garment"
+        listaPrendas.forEach(prendaStr => {
+            referenceImages.push({ "image": formatImage(prendaStr), "role": "garment" });
+        });
+
         const runwarePayload = [
             {
                 "taskType": "authentication",
@@ -40,10 +59,7 @@ export default async function handler(req, res) {
                 "outputType": "dataURI",
                 "outputFormat": "JPG",
                 "inputs": {
-                    "referenceImages": [
-                        { "image": formatImage(image), "role": "person" },
-                        { "image": formatImage(garmentBase64), "role": "garment" }
-                    ]
+                    "referenceImages": referenceImages // Pasamos el array dinámico completo
                 }
             }
         ];
@@ -58,7 +74,6 @@ export default async function handler(req, res) {
 
         if (dataRunware.errors?.length > 0) throw new Error(dataRunware.errors[0].message);
 
-        // Retornar la imagen fusionada
         return res.status(200).json({ 
             success: true, 
             resultado: dataRunware.data[0].imageURL 
