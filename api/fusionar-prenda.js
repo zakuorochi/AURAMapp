@@ -53,21 +53,19 @@ const runwarePayload = [
         "taskUUID": crypto.randomUUID(),
         "model": "prunaai:p-image@try-on",
         "positivePrompt": promptCostura,
+        "outputType": "dataURI",
+        "outputFormat": "JPG",
         "inputs": {
-            "referenceImages": [
-                { "image": formatImage(image), "role": "person" },
-                { "image": formatImage(garmentBase64), "role": "garment" }
-            ]
+            "referenceImages": referenceImages // <--- AQUÍ ESTABA EL ERROR, ESTABA HARDCODED
         }
     }
 ];
-        
-const responseRunware = await fetch("https://api.runware.ai/v1", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(runwarePayload)
-        });
 
+const responseRunware = await fetch("https://api.runware.ai/v1", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(runwarePayload)
+});
         const dataRunware = await responseRunware.json();
 
         // Si la API de Runware detectó un error interno, lo lanzamos
