@@ -37,9 +37,12 @@ export default async function handler(req, res) {
         ];
 
         // Iteramos sobre todas las prendas que llegaron y las añadimos como "garment"
-        listaPrendas.forEach(prendaStr => {
-            referenceImages.push({ "image": formatImage(prendaStr), "role": "garment" });
-        });
+     const referenceImages = [
+    { "image": formatImage(image), "role": "person" },
+    { "image": formatImage(base64_Saco), "role": "garment" },
+    { "image": formatImage(base64_Blusa), "role": "garment" },
+    { "image": formatImage(base64_Pantalon), "role": "garment" }
+];
 
    // ... dentro de tu handler
 const runwarePayload = [
