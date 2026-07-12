@@ -17,7 +17,11 @@ export default async function handler(req, res) {
         }
 
         // El prompt ahora es más sencillo porque el modelo ya entiende que es un "Try-On"
-        const promptCostura = "High-fidelity virtual try-on, photorealistic fabric, seamless garment integration on body, preserve identity and background.";
+        const promptCostura = `Virtual try-on: Convert the input flat design/sketch into a photorealistic garment. 
+- TRANSFORMATION: Apply hyper-realistic fabric textures, natural lighting, and shadows to the flat/anime-style design from the reference image.
+- REALISM: Render the garment as a tangible, physical item with 3D volume, realistic drape, and realistic fabric grain. 
+- PRESERVATION: Maintain the user's identity, background, and pose. 
+- SEAMLESSNESS: Seamlessly composite the garment onto the body with professional fashion photography quality.`;
 
         const formatImage = (img) => img.startsWith('data:') ? img : `data:image/jpeg;base64,${img}`;
 
