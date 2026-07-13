@@ -62,7 +62,7 @@
             backdrop-filter: blur(10px); max-width: 320px;
         }
 
-        /* Contenedor de cámara gigante (Ocupa el 72% de la altura de la pantalla) */
+        /* Contenedor de cámara gigante */
         .camera-viewport-container {
             width: 92vw;
             height: 72vh;
@@ -335,7 +335,7 @@
         <input type="file" id="user-gallery-file-direct" accept="image/*" style="display: none;" onchange="subirUsuarioGaleriaDirecto(event)">
 
         <h3 style="color:var(--cyan-auram); font-size: 0.85rem; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase;">Vestidor Listo</h3>
-        <p style="font-size: 0.72rem; color: #888; max-width: 290px; margin-bottom: 15px; line-height: 1.5;">Completa tu perfil para activar la costura por coordenadas.</p>
+        <p style="font-size: 0.72rem; color: #888; max-width: 290px; margin-bottom: 15px; line-height: 1.5;">Completa tu perfil para activar la costura por IA.</p>
 
         <div class="bottom-nav" style="flex-direction: row; justify-content: center; align-items: center; bottom: 30px; width: 85%; gap: 12px;">
             <button class="btn-auram" style="background:#222; width: 110px; padding: 12px 10px; font-size: 0.75rem;" onclick="volverAlInicio()">REPETIR</button>
@@ -351,7 +351,7 @@
             <img id="final-fusion-preview" alt="Resultado AURAM">
         </div>
         
-        <div class="tag-info" style="margin-top: 10px;">PROCESADO MEDIANTE COORDINADAS DIRECTAS</div>
+        <div class="tag-info" style="margin-top: 10px;">PROCESADO MEDIANTE MOTOR MULTICAPA</div>
         
         <div class="bottom-nav">
             <button class="btn-auram" style="background:#222; width: 120px;" onclick="volverAlInicio()">REPETIR</button>
@@ -361,7 +361,7 @@
 
     <div id="screen-loading" class="screen" style="background: rgba(0,0,0,0.95); z-index: 10000;">
         <div class="loader"></div>
-        <p id="loading-text" style="color: var(--cyan-auram); font-size: 0.75rem; letter-spacing: 3px; font-weight: bold; margin-top: 20px; text-transform: uppercase;">PROCESANDO PRENDA...</p>
+        <p id="loading-text" style="color: var(--cyan-auram); font-size: 0.75rem; letter-spacing: 3px; font-weight: bold; margin-top: 20px; text-transform: uppercase;">PROCESANDO...</p>
         <p id="loading-subtext" style="color: #666; font-size: 0.65rem; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px;">PREPARANDO MOTOR IA...</p>
     </div>
 
@@ -372,17 +372,14 @@
         
         let stickerProcesadoBase64 = null;
         let fotoUsuarioBase64 = null;
+        let estrategiaComposicionGlobal = ""; // Almacena la instrucción de composición
         
         let streamPrenda = null;
         let streamUsuario = null;
         
-        // Almacenes de los mapas de coordenadas JSON que se inyectarán en la fusión final
-        let mapaJsonPrenda = null;
-        let mapaJsonUsuario = null;
-
         let stickerListo = false;
         let fotoUsuarioLista = false;
-        let vieneDeGaleriaUsuario = false; // Flag para controlar el ruteo del botón repetir
+        let vieneDeGaleriaUsuario = false;
 
         function showAlert(msg) {
             const box = document.getElementById('custom-alert-box');
@@ -393,7 +390,8 @@
             }
         }
 
-        function comprimirBase64(base64Str, maxDimension = 1024, isPng = false) {
+        // Compresión vital para evitar Timeouts de Vercel (Error 500)
+        function comprimirBase64(base64Str, maxDimension = 800, isPng = false) {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => {
@@ -411,7 +409,7 @@
                     if (isPng) ctx.clearRect(0, 0, w, h);
                     else { ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h); }
                     ctx.drawImage(img, 0, 0, w, h);
-                    resolve(canvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', isPng ? 1.0 : 0.90).split(',')[1]);
+                    resolve(canvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.85).split(',')[1]);
                 };
                 img.src = (base64Str.startsWith('data:') ? '' : 'data:image/jpeg;base64,') + base64Str;
             });
@@ -429,7 +427,6 @@
                 target.classList.add('active');
                 target.style.display = 'flex';
                 
-                // Control selectivo de hardware de cámaras para evitar bloqueos de recursos
                 if (screenId === 'screen-camera-garment') {
                     apagarCamaraUsuario(); encenderCamaraPrenda();
                 } else if (screenId === 'screen-camera-user') {
@@ -508,7 +505,6 @@
             irA('screen-confirm-user');
         }
 
-        // --- MODIFICACIÓN PRIVACIDAD: SOPORTE DE GALERÍA INDEPENDIENTE DE USUARIO ---
         async function subirUsuarioGaleriaDirecto(event) {
             const file = event.target.files[0];
             if (file) {
@@ -543,35 +539,16 @@
             actualizarBarraEstadoPill();
         }
 
-        // --- RECORTE GEOMÉTRICO LOCAL (Canvas HTML5) ---
-        function recortarPrendaCliente(base64Str, coordenadas) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = () => {
-                    const [ymin, xmin, ymax, xmax] = coordenadas;
-                    const w = img.width; const h = img.height;
-                    const xReal = Math.floor((xmin / 1000) * w);
-                    const yReal = Math.floor((ymin / 1000) * h);
-                    const wReal = Math.floor(((xmax - xmin) / 1000) * w);
-                    const hReal = Math.floor(((ymax - ymin) / 1000) * h);
-                    
-                    const canvas = document.createElement('canvas');
-                    canvas.width = wReal; canvas.height = hReal;
-                    canvas.getContext('2d').drawImage(img, xReal, yReal, wReal, hReal, 0, 0, wReal, hReal);
-                    resolve(canvas.toDataURL('image/png').split(',')[1]);
-                };
-                img.src = "data:image/jpeg;base64," + base64Str;
-            });
-        }
-
-        // --- FASE 1: PROCESAMIENTO EN SEGUNDO PLANO DE LA PRENDA ---
+        // --- FASE 1: PROCESAMIENTO Y VALIDACIÓN DE LA PRENDA ---
         async function procesarFase1Extraccion() {
-            // ENFOQUE PARALELO PRIVACIDAD: Saltamos directo a la sala de setup sin forzar el hardware óptico
             irA('screen-tryon-setup'); 
             showAlert("🎨 Procesando prenda en background. Elige tu foto en la sección Usuario Map.");
 
             try {
-                const prendaComprimida = await comprimirBase64(fotoPrendaOriginal, 1024, false);
+                // Comprimir la imagen para que el servidor responda rápido y evitar timeout
+                const prendaComprimida = await comprimirBase64(fotoPrendaOriginal, 800, false);
+                
+                // NOTA: Verifica que tu endpoint se llame api/borrar-fondo o actualiza este path a api/analizar-prenda
                 const res1 = await fetch('/api/borrar-fondo', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image: prendaComprimida })
@@ -579,37 +556,40 @@
 
                 const data1 = await res1.json();
                 
-                if (data1.is_safe_garment === false || data1.success === false) {
+                if (data1.success === false) {
                     volverAlInicio();
                     showAlert("🚨 PRENDA RECHAZADA:<br>" + (data1.rejection_reason || data1.detalle));
                     return;
                 }
 
-                mapaJsonPrenda = data1;
-                stickerProcesadoBase64 = await recortarPrendaCliente(prendaComprimida, data1.coordenadas);
+                // Guardamos la estrategia generada por la IA
+                estrategiaComposicionGlobal = data1.strategy || "Replace the entire clothing set and composite all visible layers simultaneously.";
+                stickerProcesadoBase64 = prendaComprimida; 
                 stickerListo = true;
 
                 const previewImg = document.getElementById('sticker-preview-img');
                 const previewContainer = document.getElementById('sticker-preview-container');
                 if (previewImg && previewContainer) {
-                    previewImg.src = "data:image/png;base64," + stickerProcesadoBase64;
+                    previewImg.src = "data:image/jpeg;base64," + stickerProcesadoBase64;
                     previewContainer.style.display = 'block';
                 }
                 actualizarBarraEstadoPill();
             } catch (err) {
-                console.error("Error en procesamiento asíncrono de prenda:", err);
+                console.error("Error en validación de prenda:", err);
+                volverAlInicio();
                 showAlert("Error al mapear la geometría de la prenda.");
             }
         }
 
-        // --- FASE 2: PROCESAMIENTO DEL CUERPO DEL USUARIO (ESCUDO NIÑOS) ---
+        // --- FASE 2: VALIDACIÓN DE POSTURA DEL USUARIO ---
         async function procesarFase2Anatomia() {
             irA('screen-loading');
             document.getElementById('loading-text').innerText = "ESCANEANDO CUERPO";
             document.getElementById('loading-subtext').innerText = "Validando proporciones y escudo de privacidad infantil...";
 
             try {
-                fotoUsuarioBase64 = await comprimirBase64(fotoUsuarioOriginal, 1024, false);
+                // Comprimimos la imagen del usuario para mayor velocidad
+                fotoUsuarioBase64 = await comprimirBase64(fotoUsuarioOriginal, 800, false);
                 const res2 = await fetch('/api/validar-cuerpo', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image: fotoUsuarioBase64 })
@@ -617,13 +597,12 @@
 
                 const data2 = await res2.json();
 
-                if (data2.is_adult_user === false || data2.success === false) {
+                if (data2.success === false) {
                     irA('screen-tryon-setup');
                     showAlert("🚨 ACCESO DENEGADO:<br>" + (data2.rejection_reason || data2.detalle));
                     return;
                 }
 
-                mapaJsonUsuario = data2;
                 fotoUsuarioLista = true;
 
                 // Ocultar placeholder y pintar preview liso
@@ -680,7 +659,6 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(mainImg, 0, 0);
 
-                    // --- RECTIFICACIÓN ADOLFO: EFECTO ESFERAS DE LUZ MÍSTICAS PRONUNCIADAS (ANTI-FRAUDE) ---
                     const coloresEsferas = [
                         'rgba(0, 209, 255, 0.45)',  
                         'rgba(0, 114, 255, 0.40)',  
@@ -720,25 +698,25 @@
         }
 
         // --- FASE 3: FUSIÓN DE ALTA PRECISIÓN GUIADA POR EL DOBLE JSON ---
-   async function iniciarFusionTryOn() {
+        async function iniciarFusionTryOn() {
             irA('screen-loading');
             document.getElementById('loading-text').innerText = "EJECUTANDO COSTURA IA";
             document.getElementById('loading-subtext').innerText = "Analizando capas y texturas fotorrealistas...";
 
             try {
-                // 1. Llamada al nuevo backend adaptado para múltiples capas
-          const res = await fetch('/api/fusionar-prenda', {
-    method: 'POST', 
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-        image: fotoUsuarioBase64,
-        // CAMBIO: Ahora enviamos 'garments' como array para ser compatibles con el backend
-        garments: [stickerProcesadoBase64], 
-        codigo: "A001", 
-        genero: "unisex", 
-        assetsFolder: "assets"
-    })
-});
+                // 1. Llamada al nuevo backend con el array dinámico y la instrucción de la prenda
+                const res = await fetch('/api/fusionar-prenda', {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image: fotoUsuarioBase64,
+                        garments: [stickerProcesadoBase64], 
+                        strategy: estrategiaComposicionGlobal,
+                        codigo: "A001", 
+                        genero: "unisex", 
+                        assetsFolder: "assets"
+                    })
+                });
 
                 const data = await res.json();
                 
@@ -752,7 +730,7 @@
                         const imageWithWatermark = await aplicarMarcaDeAgua(data.resultado);
                         const previewElement = document.getElementById('final-fusion-preview');
                         
-                        // BLINDAJE: Esperamos a que la imagen cargue físicamente en la memoria del navegador
+                        // BLINDAJE: Esperamos a que la imagen cargue físicamente
                         previewElement.onload = () => {
                             irA('screen-fusion-result');
                             inicializarControladorZoom();
@@ -767,7 +745,6 @@
 
                     } catch (wmErr) {
                         console.error("Error en post-procesamiento de marca de agua:", wmErr);
-                        // FALLBACK: Si la marca de agua falla, muestra la imagen cruda de Pruna para no perder el resultado
                         const previewFallback = document.getElementById('final-fusion-preview');
                         previewFallback.src = data.resultado;
                         irA('screen-fusion-result');
@@ -783,7 +760,7 @@
             }
         }
 
-        // --- COMPARTIR NATIVO (Intacto) ---
+        // --- COMPARTIR NATIVO ---
         async function compartirImagen() {
             try {
                 const base64Data = document.getElementById('final-fusion-preview').src;
@@ -798,7 +775,7 @@
             } catch (e) { showAlert("Imagen guardada localmente."); }
         }
 
-        // --- SISTEMA DE PINCH TO ZOOM (Intacto) ---
+        // --- SISTEMA DE PINCH TO ZOOM ---
         let scale = 1; let lastScale = 1;
         let startX = 0, startY = 0; let posX = 0, posY = 0;
         let initialPinchDistance = 0; let isDragging = false;
@@ -833,7 +810,7 @@
             container.addEventListener('touchend', () => { isDragging = false; lastScale = scale; });
         }
 
-        // --- MAGNIFICADOR MULTITOUCH TOUCH EXPLORE DE LA PRENDA (Intacto) ---
+        // --- MAGNIFICADOR MULTITOUCH TOUCH EXPLORE DE LA PRENDA ---
         document.addEventListener('DOMContentLoaded', () => {
             const checkerboard = document.querySelector('.preview-checkerboard');
             const previewImg = document.getElementById('sticker-preview-img');
@@ -855,7 +832,8 @@
         function volverAlInicio() {
             fotoPrendaOriginal = ""; fotoUsuarioOriginal = "";
             stickerProcesadoBase64 = null; fotoUsuarioBase64 = null;
-            mapaJsonPrenda = null; mapaJsonUsuario = null;
+            estrategiaComposicionGlobal = "";
+            
             stickerListo = false; fotoUsuarioLista = false;
             vieneDeGaleriaUsuario = false;
             
