@@ -1,7 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
-    // 1. Configuración de cabeceras CORS (Intacto)
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -12,102 +11,50 @@ export default async function handler(req, res) {
         const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
         const { image } = body;
 
-        if (!image) {
-            return res.status(400).json({ isError: true, detalle: "No se recibió ninguna imagen para procesar." });
-        }
+        if (!image) return res.status(400).json({ success: false, detalle: "Sin imagen." });
 
         const cleanBase64 = image.replace(/^data:image\/\w+;base64,/, "");
 
-        // 2. Inicializar Gemini (Intacto)
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
 
-        // 3. PROMPT ACTUALIZADO: RECONOCIMIENTO, POLÍTICAS (LENCERÍA) Y EFECTO STICKER ANATÓMICO
-        const prompt = `Task: Object Detection, Content Moderation, and Anatomical Anchor Mapping for Retail Garments.
-
-        Analyze the image and focus strictly on the clothing outfit located at the central axis of the image.
+        // PROMPT SIMPLIFICADO: Solo moderación y validación
+       const prompt = `Task: Content Moderation, Garment Validation, and Composition Strategy.
+        Analyze the image and determine if it is a valid retail garment suitable for a virtual try-on application.
         
-        [CRITICAL CONTENT MODERATION RULE]:
-        - Evaluate if the garment is swimwear, lingerie, underwear, or if it covers less than 30% of a standard human body. 
-        - If it falls into any of these forbidden categories, set "is_safe_garment" to false and provide a brief friendly reason in Spanish within "rejection_reason".
-        - If it is regular, safe retail clothing (shirts, jackets, coats, t-shirts, hoodies, pants, skirts, dresses, costumes, or sketches), set "is_safe_garment" to true and "rejection_reason" to null.
-
-        [BOUNDING BOX AND ANCHOR MAPPING]:
-        - Identify the single boundary box that encapsulates the entire clothing outfit.
-        - Treat the garment like an anatomical "sticker" that will be placed onto another person. Locate the precise normalized integer coordinates (from 0 to 1000) for key textile flow boundaries:
-          1. "neckline": where the neck hole sits.
-          2. "left_sleeve_cuff" / "right_sleeve_cuff": the wrist or shoulder sleeve endings (set to null if the garment is a bottom-only piece like pants/skirts).
-          3. "bottom_hem": the lowest edge or waist/ankle ending of the garment.
-
-        Return strictly a JSON object following this model, where coordinates are normalized integers [ymin, xmin, ymax, xmax] or [y, x]:
+        Rules:
+        1. "is_safe_garment": Set false if it is lingerie, underwear, swimwear, or offensive/nude content. Set true otherwise.
+        2. "rejection_reason": If false, provide a short Spanish reason. Else null.
+        3. "is_valid_garment": Set false if the image does not contain clothing (e.g., just background, animals, faces, or objects). Set true if it is a shirt, jacket, coat, pants, etc.
+        4. "composition_strategy": For the virtual try-on engine, provide a single instruction to handle multiple layers: "Replace the entire clothing set and composite all visible layers simultaneously to ensure a cohesive outfit rendering, maintaining fabric hierarchy and realistic shadows."
+        
+        Return STRICTLY JSON:
         {
-          "is_safe_garment": true,
-          "rejection_reason": null,
-          "box_2d": [ymin, xmin, ymax, xmax],
-          "garment_anchors": {
-            "neckline": [y, x],
-            "left_sleeve_cuff": [y, x],
-            "right_sleeve_cuff": [y, x],
-            "bottom_hem": [y, x]
-          }
-        }
+          "is_safe_garment": boolean,
+          "is_valid_garment": boolean,
+          "rejection_reason": string | null,
+          "composition_strategy": string
+        }`;
 
-        Do not return any conversational text, markdown formatting, or explanations. Only the strict JSON object.`;
-
-        const parts = [
-            { text: prompt },
-            { inlineData: { data: cleanBase64, mimeType: "image/jpeg" } }
-        ];
-
-        // 4. Ejecución en modalidad Texto JSON estructurado (Intacto)
         const result = await model.generateContent({
-            contents: [{ role: "user", parts }],
-            generationConfig: {
-                responseMimeType: "application/json",
-                temperature: 0.0
-            },
-            serviceTier: "flex"  
+            contents: [{ role: "user", parts: [{ text: prompt }, { inlineData: { data: cleanBase64, mimeType: "image/jpeg" } }] }],
+            generationConfig: { responseMimeType: "application/json", temperature: 0.0 }
         });
 
-        const response = await result.response;
-        const responseText = response.text().trim();
-        
-        // Parsear las coordenadas devueltas por la IA de forma segura
-        const coordsData = JSON.parse(responseText);
-        
-        // MODIFICACIÓN CORREGIDA: Validar la nueva estructura extendida del JSON
-        if (coordsData.is_safe_garment === undefined) {
-            throw new Error("La IA no pudo procesar la estructura de seguridad de la prenda.");
-        }
+        const validation = JSON.parse(result.response.text());
 
-        // MODIFICACIÓN CORREGIDA: Si la prenda es lencería/bañador, enviar el bloqueo controlado de inmediato
-        if (!coordsData.is_safe_garment) {
+        // Respuesta simplificada y limpia para el frontend
+        if (!validation.is_safe_garment || !validation.is_valid_garment) {
             return res.status(200).json({
                 success: false,
-                is_safe_garment: false,
-                rejection_reason: coordsData.rejection_reason || "Prenda restringida por las políticas de seguridad."
+                rejection_reason: validation.rejection_reason || "La imagen no es una prenda válida."
             });
         }
 
-        // Si es segura pero fallaron las cajas geométricas, lanzar error estándar
-        if (!coordsData.box_2d || coordsData.box_2d.length !== 4) {
-            throw new Error("La IA no detectó una prenda de vestir clara en la fotografía.");
-        }
-
-        // MODIFICACIÓN CORREGIDA: Devolvemos el paquete completo estructurado al celular (coordenadas + anclajes + flag de seguridad)
-        return res.status(200).json({ 
-            success: true,
-            is_safe_garment: true,
-            coordenadas: coordsData.box_2d,
-            anclajes: coordsData.garment_anchors || null
-        });
+        return res.status(200).json({ success: true });
 
     } catch (err) {
-        // Manejo de errores (Intacto)
-        console.error("BORRAR FONDO ERROR:", err.message);
-        res.status(500).json({ 
-            isError: true, 
-            detalle: err.message 
-        });
+        console.error("VALIDACIÓN ERROR:", err.message);
+        res.status(500).json({ success: false, detalle: "Error en el servidor de validación." });
     }
 }
