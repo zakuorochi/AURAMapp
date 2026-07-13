@@ -16,10 +16,11 @@ export default async function handler(req, res) {
         const cleanBase64 = image.replace(/^data:image\/\w+;base64,/, "");
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
+        // Usar la versión 1.5-flash suele ser más estable para evitar timeouts en Vercel
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         // PROMPT SIMPLIFICADO: Solo moderación y validación
-       const prompt = `Task: Content Moderation, Garment Validation, and Composition Strategy.
+        const prompt = `Task: Content Moderation, Garment Validation, and Composition Strategy.
         Analyze the image and determine if it is a valid retail garment suitable for a virtual try-on application.
         
         Rules:
@@ -28,7 +29,7 @@ export default async function handler(req, res) {
         3. "is_valid_garment": Set false if the image does not contain clothing (e.g., just background, animals, faces, or objects). Set true if it is a shirt, jacket, coat, pants, etc.
         4. "composition_strategy": For the virtual try-on engine, provide a single instruction to handle multiple layers: "Replace the entire clothing set and composite all visible layers simultaneously to ensure a cohesive outfit rendering, maintaining fabric hierarchy and realistic shadows."
         
-        Return STRICTLY JSON:
+        Return STRICTLY JSON WITHOUT MARKDOWN:
         {
           "is_safe_garment": boolean,
           "is_valid_garment": boolean,
@@ -41,7 +42,12 @@ export default async function handler(req, res) {
             generationConfig: { responseMimeType: "application/json", temperature: 0.0 }
         });
 
-        const validation = JSON.parse(result.response.text());
+        // ------------------------------------------------------------------------
+        // LIMPIEZA DE MARKDOWN (EVITA EL ERROR 500 DE PARSEO)
+        // ------------------------------------------------------------------------
+        const rawText = result.response.text().trim();
+        const cleanJson = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
+        const validation = JSON.parse(cleanJson);
 
         // Respuesta simplificada y limpia para el frontend
         if (!validation.is_safe_garment || !validation.is_valid_garment) {
@@ -51,7 +57,11 @@ export default async function handler(req, res) {
             });
         }
 
-        return res.status(200).json({ success: true });
+        // DEVOLVEMOS LA ESTRATEGIA PARA USARLA EN PRUNA
+        return res.status(200).json({ 
+            success: true,
+            strategy: validation.composition_strategy 
+        });
 
     } catch (err) {
         console.error("VALIDACIÓN ERROR:", err.message);
