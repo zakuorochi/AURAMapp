@@ -390,20 +390,24 @@
             }
         }
 
-        async function encenderCamaraUsuario() {
-            const video = document.getElementById('webcam-user');
-            try {
-                // Ideal para tótems, busca la cámara frontal
-                streamUsuario = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user", width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false
-                });
-                video.srcObject = streamUsuario;
-            } catch (e) { showAlert("Error al iniciar cámara del tótem."); }
-        }
-
-        function apagarCamaraUsuario() {
-            if (streamUsuario) { streamUsuario.getTracks().forEach(t => t.stop()); streamUsuario = null; }
-        }
+    async function encenderCamaraUsuario() {
+    const video = document.getElementById('webcam-user');
+    try {
+        // Reducimos la resolución ideal a 720p para estabilizar componentes de menor gama
+        streamUsuario = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: "user", 
+                width: { ideal: 1280, max: 1280 }, 
+                height: { ideal: 720, max: 720 } 
+            }, 
+            audio: false
+        });
+        video.srcObject = streamUsuario;
+    } catch (e) { 
+        showAlert("Error al iniciar cámara del tótem."); 
+        console.error(e);
+    }
+}
 
      function capturarUsuario() {
     const btnCapturar = document.getElementById('btn-capturar-selfie');
@@ -432,12 +436,32 @@
             clearInterval(intervalo);
             countdownDisplay.style.display = 'none';
             
-            const v = document.getElementById('webcam-user');
-            const c = document.createElement('canvas');
-            c.width = v.videoWidth; 
-            c.height = v.videoHeight;
-            c.getContext('2d').drawImage(v, 0, 0);
-            fotoUsuarioOriginal = c.toDataURL('image/jpeg', 0.95).split(',')[1];
+clearInterval(intervalo);
+countdownDisplay.style.display = 'none';
+
+const v = document.getElementById('webcam-user');
+const c = document.createElement('canvas');
+
+// Fijamos un límite máximo de altura (ej. 720px) para estandarizar la imagen
+const MAX_HEIGHT = 720;
+let scale = 1;
+
+if (v.videoHeight > MAX_HEIGHT) {
+    scale = MAX_HEIGHT / v.videoHeight;
+}
+
+// Aplicamos la escala al canvas
+c.width = v.videoWidth * scale;
+c.height = v.videoHeight * scale;
+
+const ctx = c.getContext('2d');
+// Suavizado para mejorar la calidad al achicar
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = 'high';
+ctx.drawImage(v, 0, 0, c.width, c.height);
+
+// Reducimos la calidad JPEG a 0.8 para aligerar el peso sin perder estructura
+fotoUsuarioOriginal = c.toDataURL('image/jpeg', 0.8).split(',')[1];
             
             document.getElementById('setup-user-img').src = "data:image/jpeg;base64," + fotoUsuarioOriginal;
             
