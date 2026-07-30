@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AURAM MODULE | Vestidor Virtual B2B</title>
     <style>
+       .countdown-overlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 8rem;
+    font-weight: bold;
+    color: var(--cyan-auram);
+    text-shadow: 0 0 30px rgba(0, 209, 255, 0.8);
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 200;
+}       
         :root {
             --cyan-auram: #00d1ff;
             --dark-bg: #050505;
@@ -238,19 +251,22 @@
     </div>
 
     <!-- PANTALLA 4: CÁMARA DEL USUARIO (ESPEJO/TÓTEM) -->
-    <div id="screen-camera-user" class="screen">
-        <div class="camera-viewport-container">
-            <video id="webcam-user" class="webcam-view" autoplay playsinline muted></video>
-            <div class="camera-overlay">
-                <div class="camera-reticle" style="border-radius: 50% / 30%; width: 70%; height: 85%;"></div>
-            </div>
+<!-- PANTALLA 4: CÁMARA DEL USUARIO (ESPEJO/TÓTEM) -->
+<div id="screen-camera-user" class="screen">
+    <div class="camera-viewport-container">
+        <video id="webcam-user" class="webcam-view" autoplay playsinline muted></video>
+        <div class="camera-overlay">
+            <div class="camera-reticle" style="border-radius: 50% / 30%; width: 70%; height: 85%;"></div>
         </div>
-        <p style="font-size: 0.7rem; color: #888; margin-top: -5px; margin-bottom: 10px;">Ubícate frente a la cámara de cuerpo completo</p>
-        <div style="width: 100%; display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; width: 85%; max-width: 320px;">
-            <button class="btn-auram" style="background:#222; border: 1px solid #ff3b30; flex: 1; padding: 14px 10px; font-size: 0.75rem; margin: 0;" onclick="irA('screen-confirm-garment')">Regresar</button>
-            <button class="btn-auram" style="flex: 1; padding: 14px 10px; font-size: 0.75rem; margin: 0;" onclick="capturarUsuario()">Capturar</button>
-        </div>
+        <!-- Nuevo: Elemento del contador -->
+        <div id="countdown-display" class="countdown-overlay"></div>
     </div>
+    <p style="font-size: 0.7rem; color: #888; margin-top: -5px; margin-bottom: 10px;">Ubícate frente a la cámara de cuerpo completo</p>
+    <div style="width: 100%; display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; width: 85%; max-width: 320px;">
+        <button id="btn-regresar-selfie" class="btn-auram" style="background:#222; border: 1px solid #ff3b30; flex: 1; padding: 14px 10px; font-size: 0.75rem; margin: 0;" onclick="irA('screen-confirm-garment')">Regresar</button>
+        <button id="btn-capturar-selfie" class="btn-auram" style="flex: 1; padding: 14px 10px; font-size: 0.75rem; margin: 0;" onclick="capturarUsuario()">Capturar</button>
+    </div>
+</div>
 
     <!-- PANTALLA 5: RESUMEN ANTES DE FUSIONAR -->
     <div id="screen-tryon-setup" class="screen">
@@ -389,16 +405,49 @@
             if (streamUsuario) { streamUsuario.getTracks().forEach(t => t.stop()); streamUsuario = null; }
         }
 
-        function capturarUsuario() {
+     function capturarUsuario() {
+    const btnCapturar = document.getElementById('btn-capturar-selfie');
+    const btnRegresar = document.getElementById('btn-regresar-selfie');
+    const countdownDisplay = document.getElementById('countdown-display');
+    
+    // 1. Bloqueamos los botones para evitar múltiples clics
+    btnCapturar.disabled = true;
+    btnRegresar.disabled = true;
+    
+    // 2. Mostramos el contador
+    countdownDisplay.style.display = 'flex';
+    let contador = 3;
+    countdownDisplay.innerText = contador;
+    
+    // 3. Iniciamos el conteo
+    const intervalo = setInterval(() => {
+        contador--;
+        
+        if (contador > 0) {
+            countdownDisplay.innerText = contador;
+        } else if (contador === 0) {
+            countdownDisplay.innerText = "📸"; // Feedback visual de captura
+        } else {
+            // 4. Terminó el conteo, tomamos la foto
+            clearInterval(intervalo);
+            countdownDisplay.style.display = 'none';
+            
             const v = document.getElementById('webcam-user');
             const c = document.createElement('canvas');
-            c.width = v.videoWidth; c.height = v.videoHeight;
+            c.width = v.videoWidth; 
+            c.height = v.videoHeight;
             c.getContext('2d').drawImage(v, 0, 0);
             fotoUsuarioOriginal = c.toDataURL('image/jpeg', 0.95).split(',')[1];
             
             document.getElementById('setup-user-img').src = "data:image/jpeg;base64," + fotoUsuarioOriginal;
+            
+            // 5. Restauramos los botones y avanzamos a la siguiente pantalla
+            btnCapturar.disabled = false;
+            btnRegresar.disabled = false;
             irA('screen-tryon-setup');
         }
+    }, 1000); // Se ejecuta cada 1000ms (1 segundo)
+}
 
         // Selección de Talla
         function seleccionarTalla(talla, elementoBoton) {
@@ -431,32 +480,45 @@
         // ==========================================
         
         // Función orquestadora que corre las fases seguidas para el usuario
-        async function ejecutarProcesoCompleto() {
-            irA('screen-loading');
-            document.getElementById('loading-text').innerText = "ANALIZANDO PRENDA Y CUERPO";
-            document.getElementById('loading-subtext').innerText = "Preparando inteligencia artificial...";
+    async function ejecutarProcesoCompleto() {
+    irA('screen-loading');
+    document.getElementById('loading-text').innerText = "TEJIENDO PRENDA DIGITAL";
+    document.getElementById('loading-subtext').innerText = "Conectando con inteligencia artificial...";
 
-            try {
-                // Nota: Aquí llamarías a los endpoints originales enviando un userId genérico de Kiosco
-                const userUid = "KIOSCO_LOCAL_001"; 
-                
-                // 1. Simulación de envío a Pruna (Aquí irá tu lógica fetch a /api/fusionar-prenda)
-                document.getElementById('loading-text').innerText = "TEJIENDO PRENDA DIGITAL";
-                
-                // MOCK PARA PRUEBA DE INTERFAZ: 
-                // En producción, aquí va la llamada fetch a tus APIs (borrar-fondo, validar-cuerpo, fusionar-prenda).
-                // Por ahora pasamos directo a la pantalla final simulando éxito tras 3 segundos.
-                setTimeout(() => {
-                    // Usamos la misma foto del usuario como "resultado" para la demo visual
-                    document.getElementById('final-fusion-preview').src = "data:image/jpeg;base64," + fotoUsuarioOriginal;
-                    irA('screen-fusion-result');
-                }, 3000);
+    try {
+        // Llamada real a tu API en Vercel
+        const response = await fetch('/api/fusionar-prenda', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                image: fotoUsuarioOriginal, 
+                garmentBase64: fotoPrendaOriginal,
+                strategy: "the garments" // Opcional, pero ayuda a la IA
+            })
+        });
 
-            } catch (err) {
-                irA('screen-tryon-setup');
-                showAlert("🚨 ERROR EN VESTIDOR:<br>" + err.message);
-            }
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+            throw new Error(data.detalle || "Error en el servidor al intentar fusionar.");
         }
+
+        if (data.success && data.resultado) {
+            // Coloca la imagen devuelta por Runware en la pantalla final
+            document.getElementById('final-fusion-preview').src = data.resultado;
+            irA('screen-fusion-result');
+        } else {
+            throw new Error("No se recibió la imagen procesada.");
+        }
+
+    } catch (err) {
+        console.error(err);
+        irA('screen-tryon-setup');
+        showAlert("🚨 ERROR EN VESTIDOR:<br>" + err.message);
+    }
+}
 
         // Pago Flow
         async function iniciarPagoFlow() {
