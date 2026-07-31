@@ -519,6 +519,139 @@
                 showAlert(`Pago simulado para Código ${codigoProductoActual} - Talla ${tallaSeleccionada}`);
                 volverAlInicio();
             }, 2000);
+            function envolverTexto(ctx, texto, x, y, maxWidth, lineHeight) {
+            const palabras = texto.split(' ');
+            let linea = '';
+            let currentY = y;
+
+            for (let n = 0; n < palabras.length; n++) {
+                const testLinea = linea + palabras[n] + ' ';
+                const metricas = ctx.measureText(testLinea);
+                if (metricas.width > maxWidth && n > 0) {
+                    ctx.fillText(linea, x, currentY);
+                    linea = palabras[n] + ' ';
+                    currentY += lineHeight;
+                } else {
+                    linea = testLinea;
+                }
+            }
+            ctx.fillText(linea, x, currentY);
+        }
+
+        // Función que dibuja el marco cyberpunk y el consejo de AURAM sobre la foto
+        function fusionarTextoImagen(base64Img, textoAURAM) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = "Anonymous"; // Previene bloqueos CORS del Canvas
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // 1. Dibujamos la foto original de Runware
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // 2. Calculamos el tamaño de la caja negra transparente (inferior)
+                    const altoCaja = Math.max(160, canvas.height * 0.20); 
+                    ctx.fillStyle = 'rgba(5, 5, 5, 0.85)';
+                    ctx.fillRect(0, canvas.height - altoCaja, canvas.width, altoCaja);
+                    
+                    // 3. Línea superior de la caja (Estilo AURAM - Cyan)
+                    ctx.strokeStyle = '#00d1ff';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(0, canvas.height - altoCaja);
+                    ctx.lineTo(canvas.width, canvas.height - altoCaja);
+                    ctx.stroke();
+
+                    // 4. Escribimos la marca "AURAM" pequeña
+                    ctx.fillStyle = '#00d1ff';
+                    ctx.font = 'bold 20px "Segoe UI", sans-serif';
+                    ctx.textAlign = 'left';
+                    ctx.fillText('AURAM | STYLE ADVISOR', 25, canvas.height - altoCaja + 35);
+
+                    // 5. Dibujamos el consejo de la IA
+                    ctx.fillStyle = '#ffffff';
+                    // Tamaño de fuente adaptable a la resolución de la foto
+                    const fontSize = Math.max(22, canvas.width * 0.035); 
+                    ctx.font = `${fontSize}px "Segoe UI", sans-serif`;
+                    ctx.textBaseline = 'top';
+                    
+                    envolverTexto(
+                        ctx, 
+                        textoAURAM, 
+                        25,                                  // X (Margen izquierdo)
+                        canvas.height - altoCaja + 60,       // Y 
+                        canvas.width - 50,                   // Ancho máximo antes de salto de línea
+                        fontSize * 1.4                       // Altura de línea
+                    );
+                    
+                    // Devolvemos la imagen ya estampada
+                    resolve(canvas.toDataURL('image/jpeg', 0.9));
+                };
+                
+                // Nos aseguramos de que el formato inicie correctamente
+                img.src = base64Img.startsWith('data:') ? base64Img : 'data:image/jpeg;base64,' + base64Img;
+            });
+        }
+
+        // ==========================================
+        // PROCESO MAESTRO ACTUALIZADO
+        // ==========================================
+        async function ejecutarProcesoCompleto() {
+            irA('screen-loading');
+            document.getElementById('loading-text').innerText = "CREANDO TU NUEVO LOOK";
+            document.getElementById('loading-subtext').innerText = "Consultando a la IA...";
+
+            try {
+                // Lanzamos AMBAS peticiones simultáneamente (Runware y Gemini)
+                const peticionFusion = fetch('/api/fusionar-prenda', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image: fotoUsuarioOriginal, 
+                        garmentBase64: fotoPrendaOriginal,
+                        strategy: "the garments" 
+                    })
+                }).then(res => res.json());
+
+                const peticionAnalisis = fetch('/api/analizar-estilo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image: fotoUsuarioOriginal, 
+                        garmentBase64: fotoPrendaOriginal
+                    })
+                }).then(res => res.json());
+
+                // Esperamos a que ambas terminen
+                const [dataFusion, dataAnalisis] = await Promise.all([peticionFusion, peticionAnalisis]);
+
+                if (dataFusion.error) {
+                    throw new Error(dataFusion.detalle || "Error en el servidor al intentar fusionar.");
+                }
+
+                let finalImageUrl = dataFusion.resultado;
+
+                // Si el análisis de estilo fue exitoso, lo estampamos en la imagen
+                if (dataAnalisis.success && dataAnalisis.analisisAURAM) {
+                    document.getElementById('loading-text').innerText = "IMPRIMIENDO CONSEJO DE ESTILO";
+                    finalImageUrl = await fusionarTextoImagen(finalImageUrl, dataAnalisis.analisisAURAM);
+                }
+
+                if (finalImageUrl) {
+                    document.getElementById('final-fusion-preview').src = finalImageUrl;
+                    irA('screen-fusion-result');
+                } else {
+                    throw new Error("No se recibió la imagen procesada.");
+                }
+
+            } catch (err) {
+                console.error(err);
+                irA('screen-tryon-setup');
+                showAlert("🚨 ERROR EN VESTIDOR:<br>" + err.message);
+            }
         }
     </script>
     
