@@ -433,114 +433,63 @@
             countdownDisplay.innerText = "📸"; // Feedback visual de captura
         } else {
             // 4. Terminó el conteo, tomamos la foto
-            clearInterval(intervalo);
-            countdownDisplay.style.display = 'none';
-            
 clearInterval(intervalo);
 countdownDisplay.style.display = 'none';
 
 const v = document.getElementById('webcam-user');
 const c = document.createElement('canvas');
 
-// Fijamos un límite máximo de altura (ej. 720px) para estandarizar la imagen
-const MAX_HEIGHT = 720;
-let scale = 1;
+// 1. Obtenemos la resolución real que está enviando la cámara web (Ej. 1280x720)
+const sourceWidth = v.videoWidth;
+const sourceHeight = v.videoHeight;
 
-if (v.videoHeight > MAX_HEIGHT) {
-    scale = MAX_HEIGHT / v.videoHeight;
-}
+// 2. Definimos el tamaño de nuestro recorte vertical (formato 9:16)
+const targetHeight = sourceHeight; // Mantenemos toda la altura posible
+const targetWidth = Math.floor(sourceHeight * (9 / 16)); // Cortamos el ancho para hacerlo vertical
 
-// Aplicamos la escala al canvas
-c.width = v.videoWidth * scale;
-c.height = v.videoHeight * scale;
+// 3. Calculamos la coordenada X para empezar a cortar desde el centro
+const startX = (sourceWidth - targetWidth) / 2;
+const startY = 0;
+
+// 4. Preparamos el Canvas con el nuevo tamaño vertical
+c.width = targetWidth;
+c.height = targetHeight;
 
 const ctx = c.getContext('2d');
-// Suavizado para mejorar la calidad al achicar
 ctx.imageSmoothingEnabled = true;
 ctx.imageSmoothingQuality = 'high';
-ctx.drawImage(v, 0, 0, c.width, c.height);
 
-// Reducimos la calidad JPEG a 0.8 para aligerar el peso sin perder estructura
-fotoUsuarioOriginal = c.toDataURL('image/jpeg', 0.8).split(',')[1];
-            
-            document.getElementById('setup-user-img').src = "data:image/jpeg;base64," + fotoUsuarioOriginal;
-            
-            // 5. Restauramos los botones y avanzamos a la siguiente pantalla
-            btnCapturar.disabled = false;
-            btnRegresar.disabled = false;
-            irA('screen-tryon-setup');
-        }
-    }, 1000); // Se ejecuta cada 1000ms (1 segundo)
-}
+// 5. Aplicamos el recorte (Crop) centrando a la persona y borrando el entorno
+ctx.drawImage(
+    v, 
+    startX, startY, targetWidth, targetHeight, // De dónde cortamos (Centro)
+    0, 0, targetWidth, targetHeight           // Dónde lo pegamos en el canvas
+);
 
-        // Selección de Talla
-        function seleccionarTalla(talla, elementoBoton) {
-            tallaSeleccionada = talla;
-            
-            // Quitar clase selected de todos
-            document.querySelectorAll('.btn-talla').forEach(btn => btn.classList.remove('selected'));
-            // Agregar al seleccionado
-            elementoBoton.classList.add('selected');
-            
-            // Habilitar botón de pago
-            document.getElementById('btn-pagar-flow').disabled = false;
-        }
+/* 
+   ===============================================================
+   OPCIÓN PARA CÁMARA ROTADA FÍSICAMENTE:
+   Si tu cámara web está montada "de costado" dentro del tótem, 
+   comenta el 'ctx.drawImage' de arriba y descomenta estas líneas:
+   ===============================================================
+   c.width = sourceHeight;
+   c.height = sourceWidth;
+   ctx.translate(c.width / 2, c.height / 2);
+   ctx.rotate(90 * Math.PI / 180);
+   ctx.drawImage(v, -sourceWidth / 2, -sourceHeight / 2);
+*/
 
-        // Reinicio del Kiosco
-        function volverAlInicio() {
-            fotoPrendaOriginal = ""; 
-            fotoUsuarioOriginal = "";
-            tallaSeleccionada = "";
-            document.getElementById('setup-garment-img').src = "";
-            document.getElementById('setup-user-img').src = "";
-            document.getElementById('btn-pagar-flow').disabled = true;
-            document.querySelectorAll('.btn-talla').forEach(btn => btn.classList.remove('selected'));
-            
-            irA('screen-inicio');
-        }
+// Extraemos la imagen optimizada (calidad 0.85) lista para la IA
+fotoUsuarioOriginal = c.toDataURL('image/jpeg', 0.85).split(',')[1];
 
-        // ==========================================
-        // LÓGICA DE APIs (Simplificada para Kiosco)
-        // ==========================================
-        
-        // Función orquestadora que corre las fases seguidas para el usuario
-    async function ejecutarProcesoCompleto() {
-    irA('screen-loading');
-    document.getElementById('loading-text').innerText = "TEJIENDO PRENDA DIGITAL";
-    document.getElementById('loading-subtext').innerText = "Conectando con inteligencia artificial...";
+document.getElementById('setup-user-img').src = "data:image/jpeg;base64," + fotoUsuarioOriginal;
 
-    try {
-        // Llamada real a tu API en Vercel
-        const response = await fetch('/api/fusionar-prenda', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                image: fotoUsuarioOriginal, 
-                garmentBase64: fotoPrendaOriginal,
-                strategy: "the garments" // Opcional, pero ayuda a la IA
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || data.error) {
-            throw new Error(data.detalle || "Error en el servidor al intentar fusionar.");
-        }
-
-        if (data.success && data.resultado) {
-            // Coloca la imagen devuelta por Runware en la pantalla final
-            document.getElementById('final-fusion-preview').src = data.resultado;
-            irA('screen-fusion-result');
-        } else {
-            throw new Error("No se recibió la imagen procesada.");
-        }
-
-    } catch (err) {
-        console.error(err);
-        irA('screen-tryon-setup');
-        showAlert("🚨 ERROR EN VESTIDOR:<br>" + err.message);
+// Restauramos los botones y avanzamos a la siguiente pantalla
+const btnCapturar = document.getElementById('btn-capturar-selfie');
+const btnRegresar = document.getElementById('btn-regresar-selfie');
+btnCapturar.disabled = false;
+btnRegresar.disabled = false;
+irA('screen-tryon-setup');
     }
 }
 
